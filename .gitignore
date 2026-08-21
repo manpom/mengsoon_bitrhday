@@ -1,0 +1,20 @@
+# Godot 4 -----------------------------------------------------
+# 에디터가 자동으로 만드는 캐시/임포트 폴더 (커밋할 필요 없음)
+.godot/
+/android/
+
+# 내보내기 설정에는 개인 경로/키가 들어갈 수 있어서 제외
+export_presets.cfg
+
+# 빌드 결과물
+/build/
+/export/
+
+# 도구가 만든 미리보기 이미지
+tools/preview.png
+
+# OS / 에디터 부산물
+Thumbs.db
+desktop.ini
+.DS_Store
+*.tmp

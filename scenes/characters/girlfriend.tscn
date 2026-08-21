@@ -1,0 +1,42 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/characters/girlfriend.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/girlfriend_idle.png" id="2_texture"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/emote_heart.png" id="3_heart"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(32, 12)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_proximity"]
+radius = 64.0
+
+[node name="Girlfriend" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+scale = Vector2(2, 2)
+texture = ExtResource("2_texture")
+offset = Vector2(0, -16)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Emote" type="Sprite2D" parent="."]
+visible = false
+texture_filter = 1
+position = Vector2(0, -68)
+scale = Vector2(2, 2)
+texture = ExtResource("3_heart")
+
+[node name="ProximityArea" type="Area2D" parent="."]
+position = Vector2(0, -20)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ProximityArea"]
+shape = SubResource("CircleShape2D_proximity")

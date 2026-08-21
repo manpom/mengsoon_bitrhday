@@ -1,0 +1,18 @@
+# 팔레트 정의 (문자 = RRGGBB 또는 none)
+# tools/generate_sprites.ps1 이 이 파일을 읽어서 색을 칠합니다.
+. none
+o 1E3A24
+G 9BDD73
+g 6FB84D
+d 4A8A3C
+D 356628
+B FBEFC8
+b E6D4A0
+W FFFFFF
+K 23202E
+P F58BB0
+Y 4B3A2C
+N 3E4E80
+n 2A3559
+R FF6B8A
+r D9436B
