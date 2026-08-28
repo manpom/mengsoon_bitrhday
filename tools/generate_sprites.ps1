@@ -21,7 +21,7 @@ $PreviewOut= Join-Path $PSScriptRoot 'preview.png'
 if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Force -Path $OutDir | Out-Null }
 
 # ---------- 1. 팔레트 읽기 ----------
-$palette = @{}
+$palette = New-Object System.Collections.Hashtable ([System.StringComparer]::Ordinal)   # 대소문자 구분 (G와 g는 다른 색)
 foreach ($line in Get-Content (Join-Path $ArtDir '_palette.txt')) {
     $t = $line.Trim()
     if ($t -eq '' -or $t.StartsWith('#')) { continue }
