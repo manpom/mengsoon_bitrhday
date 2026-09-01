@@ -1,0 +1,195 @@
+[gd_scene load_steps=21 format=3]
+
+[ext_resource type="Script" path="res://scripts/characters/mengdol.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/shadow.png" id="2_shadow"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/tap.png" id="3_tap"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_down_idle.png" id="4_di"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_down_walk1.png" id="5_dw1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_down_walk2.png" id="6_dw2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_up_idle.png" id="7_ui"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_up_walk1.png" id="8_uw1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_up_walk2.png" id="9_uw2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_side_idle.png" id="10_si"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_side_walk1.png" id="11_sw1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_side_walk2.png" id="12_sw2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_face_happy.png" id="13_fh"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_face_surprise.png" id="14_fu"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_face_sad.png" id="15_fs"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_face_angry.png" id="16_fa"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_face_sleepy.png" id="17_fz"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_lie.png" id="18_lie"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_feet"]
+size = Vector2(30, 10)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_reach"]
+radius = 30.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_mengdol"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_di")
+}],
+"loop": true,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7_ui")
+}],
+"loop": true,
+"name": &"idle_up",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("10_si")
+}],
+"loop": true,
+"name": &"idle_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_dw1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_di")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_dw2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_di")
+}],
+"loop": true,
+"name": &"walk_down",
+"speed": 9.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_uw1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_ui")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_uw2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_ui")
+}],
+"loop": true,
+"name": &"walk_up",
+"speed": 9.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("11_sw1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_si")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_sw2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_si")
+}],
+"loop": true,
+"name": &"walk_side",
+"speed": 9.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("13_fh")
+}],
+"loop": true,
+"name": &"face_happy",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("14_fu")
+}],
+"loop": true,
+"name": &"face_surprise",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("15_fs")
+}],
+"loop": true,
+"name": &"face_sad",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("16_fa")
+}],
+"loop": true,
+"name": &"face_angry",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("17_fz")
+}],
+"loop": true,
+"name": &"face_sleepy",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("18_lie")
+}],
+"loop": true,
+"name": &"lie",
+"speed": 5.0
+}]
+
+[node name="Mengdol" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1_script")
+
+[node name="Shadow" type="Sprite2D" parent="."]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(0, -3)
+texture = ExtResource("2_shadow")
+
+[node name="Body" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_mengdol")
+animation = &"idle_down"
+autoplay = "idle_down"
+offset = Vector2(0, -32)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -5)
+shape = SubResource("RectangleShape2D_feet")
+
+[node name="Interactor" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 8
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactor"]
+position = Vector2(0, -16)
+shape = SubResource("CircleShape2D_reach")
+
+[node name="Step" type="AudioStreamPlayer" parent="."]
+volume_db = -7.0
+
+[node name="TapMark" type="Sprite2D" parent="."]
+visible = false
+z_index = 30
+texture = ExtResource("3_tap")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, -28)
+position_smoothing_enabled = true
+position_smoothing_speed = 6.0

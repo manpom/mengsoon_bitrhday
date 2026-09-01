@@ -1,0 +1,20 @@
+[gd_resource type="Theme" load_steps=2 format=3]
+
+; 프로젝트 기본 UI 테마.
+;
+; 폰트: Galmuri11 (https://github.com/quiple/galmuri), SIL Open Font License 1.1.
+;   - 한글 픽셀 폰트라 이 게임 화풍과 맞습니다.
+;   - OFL 이라 게임에 넣어서 배포해도 됩니다. 라이선스 전문은 assets/fonts/OFL.txt.
+;   - 파일을 프로젝트 안에 넣었기 때문에 ★웹으로 내보내도 글자가 깨지지 않습니다.
+;     (예전에 쓰던 SystemFont 방식은 PC에 깔린 폰트를 빌려 쓰는 거라 웹에서 깨졌습니다)
+;
+; ★ 글자 크기는 11 의 배수로 쓰세요.
+;   Galmuri11 은 "11픽셀에 딱 맞게" 그려진 폰트입니다. 12나 13으로 쓰면
+;   글자가 미묘하게 뭉개집니다. 더 크게 쓰고 싶으면 22, 33 으로 올리세요.
+;   (외곽선을 매끄럽게 만드는 안티에일리어싱은 폰트 import 설정에서 꺼 뒀습니다)
+
+[ext_resource type="FontFile" path="res://assets/fonts/Galmuri11.ttf" id="1_font"]
+
+[resource]
+default_font = ExtResource("1_font")
+default_font_size = 11

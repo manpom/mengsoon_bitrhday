@@ -1,0 +1,211 @@
+extends Node2D
+## 미니게임 1 「원 투 뿡!」 — 추억 1 (원투 방구 사건)
+##
+## [b]지금 들어 있는 것: 도입 컷신까지.[/b]
+##   페이드인 → 대화 → 맹돌이가 원·투 시범 → 맹순이가 따라하다 뿡 →
+##   맹순이 얼굴 빨개짐 → 맹돌이 폭소 → 페이드아웃
+## 그 다음에 붙을 리듬 게임은 아래 _start_rhythm_game() 자리입니다.
+##
+## [b]리듬 게임 설계 방향 (닌텐도 리듬천국 방식)[/b]
+##   - 떨어지는 노트 레인을 만들지 않습니다. 소리와 캐릭터 동작이 곧 박자입니다.
+##   - 입력은 탭 하나. (아이폰에서 손가락 하나로 되어야 하니까)
+##   - 콜 앤 리스폰스: 맹돌이가 "원, 투!" 하면 플레이어가 "원, 투, 뿡!" 으로 답합니다.
+##     실제 사건이 원래 이 구조라서 소재와 장르가 그대로 포개집니다.
+##
+## [b]화면[/b]
+##   미니게임 화면은 카메라가 움직이지 않습니다. 배경(640x270)을 x=-80 에 놓아
+##   기준 화면(480x270) 가운데에 욕실이 오게 하고, 남는 좌우는 화면이 더 넓은
+##   기기에서 벽 타일이 계속 이어져 보이도록 쓰입니다.
+
+# 두 사람이 서는 자리
+const MENGDOL_POS := Vector2(300, 214)
+const MENGSOON_POS := Vector2(196, 214)
+
+@onready var mengdol: Sprite2D = $Cast/Mengdol
+@onready var mengsoon: Sprite2D = $Cast/Mengsoon
+@onready var fart: Sprite2D = $Cast/Fart
+@onready var sparkle: Sprite2D = $Cast/Sparkle
+@onready var shout: Label = $Ui/Shout
+@onready var fade: ColorRect = $Fx/Fade
+@onready var sfx: AudioStreamPlayer = $Sfx
+
+# 나체 포즈들. 컷신에서 이 그림들을 갈아 끼우는 것이 곧 연기입니다.
+const POSE := {
+	"d_stand": preload("res://assets/sprites/characters/mengdol/mengdol_nude_stand.png"),
+	"d_guard": preload("res://assets/sprites/characters/mengdol/mengdol_nude_guard.png"),
+	"d_punch1": preload("res://assets/sprites/characters/mengdol/mengdol_nude_punch1.png"),
+	"d_punch2": preload("res://assets/sprites/characters/mengdol/mengdol_nude_punch2.png"),
+	"d_laugh": preload("res://assets/sprites/characters/mengdol/mengdol_nude_laugh.png"),
+	"s_stand": preload("res://assets/sprites/characters/mengsoon/mengsoon_nude_stand.png"),
+	"s_guard": preload("res://assets/sprites/characters/mengsoon/mengsoon_nude_guard.png"),
+	"s_punch1": preload("res://assets/sprites/characters/mengsoon/mengsoon_nude_punch1.png"),
+	"s_punch2": preload("res://assets/sprites/characters/mengsoon/mengsoon_nude_punch2.png"),
+	"s_surprise": preload("res://assets/sprites/characters/mengsoon/mengsoon_nude_surprise.png"),
+	"s_shy": preload("res://assets/sprites/characters/mengsoon/mengsoon_nude_shy.png"),
+}
+const FART_PUFF := [
+	preload("res://assets/sprites/stages/fart1.png"),
+	preload("res://assets/sprites/stages/fart2.png"),
+	preload("res://assets/sprites/stages/fart3.png"),
+]
+const SFX_TICK := preload("res://assets/audio/sfx/tick.wav")
+const SFX_TOCK := preload("res://assets/audio/sfx/tock.wav")
+const SFX_BBOONG := preload("res://assets/audio/sfx/bboong.wav")
+const SFX_DING := preload("res://assets/audio/sfx/ding.wav")
+
+
+func _ready() -> void:
+	fade.color.a = 1.0
+	fart.visible = false
+	sparkle.visible = false
+	shout.modulate.a = 0.0
+	mengdol.texture = POSE["d_stand"]
+	mengsoon.texture = POSE["s_stand"]
+	mengdol.position = MENGDOL_POS
+	mengsoon.position = MENGSOON_POS
+	_play_intro()
+
+
+# ------------------------------------------------------------ 도입 컷신
+
+func _play_intro() -> void:
+	await get_tree().create_timer(0.3).timeout
+	await _fade_to(0.0, 0.9)
+	await get_tree().create_timer(0.4).timeout
+
+	Dialogue.say(["...어때, 이제 복싱에 대해 조금 알겠어?"], "맹돌이")
+	await Dialogue.finished
+	Dialogue.say(["조금 어려워. 직접 보여줄 수 있어?"], "맹순이")
+	await Dialogue.finished
+	Dialogue.say(["당연하지. 잘 보고 따라해봐."], "맹돌이")
+	await Dialogue.finished
+
+	# --- 맹돌이의 시범
+	mengdol.texture = POSE["d_guard"]
+	await get_tree().create_timer(0.6).timeout
+	await _jab(mengdol, "d_punch1", "원!", SFX_TICK)
+	await _jab(mengdol, "d_punch2", "투!", SFX_TOCK)
+	mengdol.texture = POSE["d_stand"]
+	await get_tree().create_timer(0.3).timeout
+
+	Dialogue.say(["따라해봐."], "맹돌이")
+	await Dialogue.finished
+
+	# --- 맹순이가 따라한다
+	mengsoon.texture = POSE["s_guard"]
+	await get_tree().create_timer(0.7).timeout
+	await _jab(mengsoon, "s_punch1", "원!", SFX_TICK)
+	await _jab(mengsoon, "s_punch2", "투!", SFX_TOCK)
+
+	# --- 그리고 뿡
+	await _bboong()
+
+	# --- 맹순이는 새빨개지고, 맹돌이는 주저앉아 웃는다
+	mengsoon.texture = POSE["s_surprise"]
+	_shout("뿡?!", Color(1, 1, 1))
+	await get_tree().create_timer(0.7).timeout
+	mengsoon.texture = POSE["s_shy"]
+	await get_tree().create_timer(0.5).timeout
+
+	mengdol.texture = POSE["d_laugh"]
+	_pop_sparkle()
+	sfx.stream = SFX_DING
+	sfx.play()
+	_shake(mengdol, 1.4)
+	await get_tree().create_timer(1.6).timeout
+
+	Dialogue.say(["푸하하하하!", "야, 그거 원 투 뿡이잖아!"], "맹돌이")
+	await Dialogue.finished
+	Dialogue.say(["...보지 마."], "맹순이")
+	await Dialogue.finished
+
+	await _fade_to(1.0, 0.9)
+	await get_tree().create_timer(0.4).timeout
+	_start_rhythm_game()
+
+
+## 주먹 한 번: 포즈를 바꾸고, 글자를 띄우고, 소리를 낸다.
+func _jab(who: Sprite2D, pose_key: String, text: String, sound: AudioStream) -> void:
+	who.texture = POSE[pose_key]
+	sfx.stream = sound
+	sfx.play()
+	_shout(text, Color(1, 0.95, 0.8))
+	# 주먹을 뻗을 때 몸이 살짝 앞으로 나갔다 돌아온다
+	var punch := create_tween()
+	punch.tween_property(who, "position:y", who.position.y - 3.0, 0.07)
+	punch.tween_property(who, "position:y", who.position.y, 0.13)
+	await get_tree().create_timer(0.55).timeout
+
+
+## 방귀. 보라색 구름이 뒤에서 세 단계로 퍼진다.
+func _bboong() -> void:
+	sfx.stream = SFX_BBOONG
+	sfx.play()
+	_shout("뿡!", Color(0.85, 0.7, 1.0))
+	# 맹순이 뒤쪽(화면 왼쪽 아래)에서 피어오릅니다
+	fart.position = mengsoon.position + Vector2(-26, -14)
+	fart.visible = true
+	fart.modulate.a = 1.0
+	for i in FART_PUFF.size():
+		fart.texture = FART_PUFF[i]
+		fart.position += Vector2(-5, -4)
+		await get_tree().create_timer(0.16).timeout
+	var out := create_tween()
+	out.tween_property(fart, "modulate:a", 0.0, 0.7)
+	await out.finished
+	fart.visible = false
+
+
+# ------------------------------------------------------------ 연출 도구
+
+func _shout(text: String, color: Color) -> void:
+	shout.text = text
+	shout.modulate = color
+	shout.modulate.a = 1.0
+	shout.scale = Vector2(0.6, 0.6)
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(shout, "scale", Vector2.ONE, 0.16) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(shout, "modulate:a", 0.0, 0.5).set_delay(0.3)
+
+
+func _pop_sparkle() -> void:
+	sparkle.position = mengdol.position + Vector2(0, -70)
+	sparkle.visible = true
+	sparkle.scale = Vector2(0.4, 0.4)
+	sparkle.modulate.a = 1.0
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(sparkle, "scale", Vector2(1.6, 1.6), 0.5)
+	tw.tween_property(sparkle, "modulate:a", 0.0, 0.5)
+
+
+## 웃느라 몸이 들썩이는 연출
+func _shake(who: Sprite2D, seconds: float) -> void:
+	var home := who.position
+	var tw := create_tween().set_loops(int(seconds / 0.16))
+	tw.tween_property(who, "position:y", home.y - 3.0, 0.08)
+	tw.tween_property(who, "position:y", home.y, 0.08)
+
+
+func _fade_to(target: float, duration: float) -> void:
+	var tw := create_tween()
+	tw.tween_property(fade, "color:a", target, duration).set_trans(Tween.TRANS_SINE)
+	await tw.finished
+
+
+# ------------------------------------------------------------ 다음 단계
+
+## ★ 여기에 리듬 게임이 들어갑니다.
+##
+## 지금은 아직 없어서 방으로 돌려보냅니다. GameState 에 클리어 표시를 하지
+## 않으므로, 방에 돌아가도 복싱글러브는 여전히 노란 느낌표인 채로 남습니다.
+##
+## 리듬 게임을 만들 때 할 일:
+##   1. 이 함수에서 리듬 파트를 시작 (같은 씬 안에서 UI만 바꿔 끼우면 됩니다)
+##   2. 클리어하면
+##        GameState.unlock_photo("clover")
+##        GameState.unlock_photo("king_mengsoon")
+##        GameState.set_flag("minigame1_done", true)
+##   3. 그리고 방으로 복귀
+func _start_rhythm_game() -> void:
+	get_tree().change_scene_to_file("res://scenes/levels/mengdol_house.tscn")

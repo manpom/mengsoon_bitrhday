@@ -10,11 +10,21 @@ export_presets.cfg
 /build/
 /export/
 
-# 도구가 만든 미리보기 이미지
+# 도구가 만든 미리보기 이미지 / 버전 비교용 임시 파일
 tools/preview.png
+tools/zoom.png
+tools/variants.png
+tools/variants/
+tools/concepts.png
+tools/room_preview.png
+tools/concepts/
 
 # OS / 에디터 부산물
 Thumbs.db
 desktop.ini
 .DS_Store
 *.tmp
+
+# 캐릭터 프레임 중간 산출물 / 미리보기 (build_char.ps1 이 다시 만듭니다)
+tools/art/frames/
+tools/char_preview.png
