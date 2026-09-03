@@ -71,12 +71,14 @@ lines = Array[String](["(밖으로 나가는 문이다.)", "(...나가기 전에
 marker_offset = Vector2(0, -330)
 
 [node name="Gloves" parent="Zones" instance=ExtResource("2_prop")]
-position = Vector2(237, 626)
-zone_size = Vector2(220, 150)
-zone_offset = Vector2(0, -40)
+position = Vector2(270, 600)
+zone_size = Vector2(200, 130)
+zone_offset = Vector2(0, -30)
+click_size = Vector2(190, 200)
+click_offset = Vector2(15, -363)
 lines = Array[String](["(복싱 글러브다. 한참 쓴 것처럼 낡았다.)", "(...누구한테 복싱을 가르쳐 준 적이 있었나?)"])
 marker_kind = 1
-marker_offset = Vector2(53, -440)
+marker_offset = Vector2(15, -470)
 
 [node name="Walls" type="Node2D" parent="."]
 

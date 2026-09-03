@@ -43,10 +43,10 @@ $JOBS = @(
     @{ n = 'face_laugh'; face = 'laugh' }
 
     # 침대에 누운 그림.
-    # ★ 서 있는 그림을 통째로 90도 돌리면 그대로 누운 그림이 됩니다.
-    #   등을 대고 누우면 정수리가 왼쪽(머리맡), 발이 오른쪽(발치)을 향하고
-    #   얼굴은 천장 = 우리 쪽을 봅니다. 따로 그릴 필요가 없습니다.
-    @{ n = 'lie'; face = 'sleepy'; rot = $true }
+    # ★ 서 있는 그림을 90도 돌리던 예전 방식은 몸이 옆으로 길게 누워 보여서
+    #   버렸습니다. 이제는 Draw-LieHead 가 [b]이불 밖으로 얼굴만[/b] 낸
+    #   정면 모습을 따로 그립니다. 자세한 이유는 _meng_soft.ps1 참고.
+    @{ n = 'lie'; lie = $true }
 
     # 욕실 컷신 (옷 없음)
     @{ n = 'nude_stand'; nude = $true }
@@ -68,6 +68,23 @@ $JOBS = @(
 #  한 장 굽기
 # ============================================================
 function Bake([string]$who, [hashtable]$j, [string]$path) {
+    # 누운 얼굴은 몸을 그리지 않는 완전히 다른 그림이라 별도 경로로 굽습니다.
+    if ($j.ContainsKey('lie') -and $j.lie) {
+        New-Soft 300 300
+        Draw-LieHead $who
+        $big = Take-Soft
+        $out = New-Object System.Drawing.Bitmap($FRAME, $FRAME,
+            [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+        $g = [System.Drawing.Graphics]::FromImage($out)
+        $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+        $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+        # 300x300 정사각 캔버스를 그대로 192x192 로 줄입니다 (0.64배, 가로세로 동일).
+        $g.DrawImage($big, 0, 0, $FRAME, $FRAME)
+        $g.Dispose(); $big.Dispose()
+        $out.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+        return $out
+    }
+
     $o = @{ who = $who }
     foreach ($k in 'dir', 'step', 'face', 'pose', 'nude') {
         if ($j.ContainsKey($k)) { $o[$k] = $j[$k] }
@@ -88,9 +105,6 @@ function Bake([string]$who, [hashtable]$j, [string]$path) {
     $dy = ($FRAME - 2.0) - $SRC_FOOT_Y * $sc
     $g.DrawImage($big, [single]$dx, [single]$dy, [single]($SRC_W * $sc), [single]($SRC_H * $sc))
     $g.Dispose(); $big.Dispose()
-    if ($j.ContainsKey('rot') -and $j.rot) {
-        $out.RotateFlip([System.Drawing.RotateFlipType]::Rotate270FlipNone)
-    }
     $out.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
     return $out
 }

@@ -57,6 +57,14 @@ const MARK_STORY: Texture2D = preload("res://assets/sprites/ui/prompt_story.png"
 @export var zone_size: Vector2 = Vector2.ZERO
 ## 위 사각형의 중심 (기준점에서 잰 값).
 @export var zone_offset: Vector2 = Vector2.ZERO
+## 화면을 [b]찍었을 때[/b] "이 물건을 찍었다"로 볼 사각형. (0,0) 이면 zone_size 를
+## 그대로 씁니다. 텍스처 없는 물건(방 그림에 이미 그려진 가구)은 대개 이 값이
+## 필요합니다 - zone_size/zone_offset 은 "다가가서 서는 바닥 위치"이고,
+## 그림 속 물건은 벽 위쪽처럼 [b]다른 높이[/b]에 그려져 있을 수 있기 때문입니다.
+## (예: 복싱 글러브는 벽에 걸려 있어서, 서는 자리는 바닥인데 찍는 자리는 그 위쪽입니다.)
+@export var click_size: Vector2 = Vector2.ZERO
+## 위 사각형의 중심 (기준점에서 잰 값).
+@export var click_offset: Vector2 = Vector2.ZERO
 ## 조사했을 때 나올 대사. 한 줄이 대사창 한 번입니다.
 @export_multiline var lines: Array[String] = []
 ## 조사할 수 있을 때 뜨는 말풍선의 위치 (기준점에서 잰 값).
@@ -99,14 +107,27 @@ func stand_point() -> Vector2:
 
 
 ## 화면의 이 지점을 찍었을 때 "이 물건을 찍은 것"으로 볼지.
-## 눈에 보이는 그림 영역을 그대로 씁니다.
+##
+## ★ 텍스처가 있으면 눈에 보이는 그림 영역을 그대로 씁니다.
+##   텍스처가 없는 물건(방 그림에 이미 그려진 가구)은 눈에 보이는 그림 영역이라는
+##   게 없으므로, click_size/click_offset (없으면 zone_size/zone_offset) 사각형을
+##   대신 씁니다. 이 사각형이 없으면 [b]그 물건은 절대 찍을 수 없습니다[/b] -
+##   "물건을 찍으면 걸어가서 조사한다"가 텍스처 없는 물건에도 통하려면 필수입니다.
 func contains_point(world: Vector2) -> bool:
-	if texture == null or zone_size == Vector2.ZERO:
+	if texture != null:
+		if zone_size == Vector2.ZERO:
+			return false
+		var w: float = texture.get_width()
+		var h: float = texture.get_height()
+		var top_left := global_position + Vector2(-w * 0.5, -(h - sprite_bottom_pad))
+		return Rect2(top_left, Vector2(w, h)).has_point(world)
+
+	var csize: Vector2 = click_size if click_size != Vector2.ZERO else zone_size
+	if csize == Vector2.ZERO:
 		return false
-	var w: float = texture.get_width()
-	var h: float = texture.get_height()
-	var top_left := global_position + Vector2(-w * 0.5, -(h - sprite_bottom_pad))
-	return Rect2(top_left, Vector2(w, h)).has_point(world)
+	var coffset: Vector2 = click_offset if click_size != Vector2.ZERO else zone_offset
+	var top_left2 := global_position + coffset - csize * 0.5
+	return Rect2(top_left2, csize).has_point(world)
 
 
 ## 조사 가능 상태 표시 (말풍선 + 살짝 밝아짐).

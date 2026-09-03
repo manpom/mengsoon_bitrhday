@@ -271,9 +271,9 @@ function Draw-Face([double]$cx, [double]$hcy, [double]$hrx, [double]$hry,
     #   삐져나와 얼굴에 띠를 두른 것처럼 보입니다.
     if ($face -eq 'shy') {
         PushClip $headPath
-        GroundShadow $cx ($hcy + $hry * 0.16) ($hrx * 0.86) ($hry * 0.44) $MP.flush 0.72
+        GroundShadow $cx ($hcy + $hry * 0.16) ($hrx * 0.88) ($hry * 0.46) $MP.flush 0.80
         foreach ($sd in @(-1, 1)) {
-            GroundShadow ($cx + $sd * $hrx * 0.52) ($hcy + $hry * 0.22) ($hrx * 0.34) ($hry * 0.24) $MP.flushDeep 0.62
+            GroundShadow ($cx + $sd * $hrx * 0.52) ($hcy + $hry * 0.20) ($hrx * 0.38) ($hry * 0.28) $MP.flushDeep 0.70
         }
         PopClip
     }
@@ -288,26 +288,66 @@ function Draw-Face([double]$cx, [double]$hcy, [double]$hrx, [double]$hry,
         FillPath (EllipsePath ($cx + $sd * 12) ($hcy + $hry * 0.20) 4 3) '#8A6E59'
     }
 
-    # --- 눈
+    # --- 눈썹
+    # ★ 표정마다 눈만 다르면 "졸린 것"과 "웃는 것"이 실루엣에서 구분이 안 갑니다.
+    #   웃음은 눈썹을 위로 튕기고, 부끄러움은 팔(八)자로 처지게 해서 신호를 더합니다.
+    #   무표정 · sleepy 는 눈썹을 안 그립니다 (그게 오히려 "쉬는 얼굴"로 읽힘).
     switch ($face) {
-        { $_ -in 'happy', 'laugh' } {
+        'laugh' {
             foreach ($sd in @(-1, 1)) {
-                $px = $cx + $sd * $ex
-                EyeArcSoft $px ($ey + 4) ($er * 0.95) 0.78 6
+                CurveStroke @(
+                    (Pt ($cx + $sd * ($ex - $er * 0.85)) ($ey - $er * 1.42)),
+                    (Pt ($cx + $sd * ($ex + $er * 0.35)) ($ey - $er * 1.86))
+                ) $MP.eye 5 0.5
             }
-            if ($face -eq 'laugh') {
-                foreach ($sd in @(-1, 1)) {
-                    $px = $cx + $sd * ($ex + $er * 0.95)
-                    FillPath (EllipsePath ($px + $sd * 8) ($ey + 26) 8 11) $MP.tear
-                    FillPath (EllipsePath ($px + $sd * 6) ($ey + 21) 3 3) $MP.white
-                }
+        }
+        'happy' {
+            foreach ($sd in @(-1, 1)) {
+                CurveStroke @(
+                    (Pt ($cx + $sd * ($ex - $er * 0.7)) ($ey - $er * 1.28)),
+                    (Pt ($cx + $sd * ($ex + $er * 0.3)) ($ey - $er * 1.58))
+                ) $MP.eye 4.5 0.5
             }
         }
         'shy' {
-            foreach ($sd in @(-1, 1)) { EyeArcSoft ($cx + $sd * $ex) ($ey + 8) ($er * 0.95) -0.5 7 }
+            foreach ($sd in @(-1, 1)) {
+                CurveStroke @(
+                    (Pt ($cx + $sd * ($ex - $er * 0.55)) ($ey - $er * 1.5)),
+                    (Pt ($cx + $sd * ($ex + $er * 0.85)) ($ey - $er * 1.1))
+                ) $MP.eye 4.5 0.5
+            }
+        }
+    }
+
+    # --- 눈
+    switch ($face) {
+        'happy' {
+            foreach ($sd in @(-1, 1)) {
+                $px = $cx + $sd * $ex
+                EyeArcSoft $px ($ey + 4) ($er * 0.95) 0.72 6
+            }
+        }
+        'laugh' {
+            # ★ 자는 눈과 헷갈리지 않도록 sleepy 보다 훨씬 깊고 두껍게 꽉 감습니다.
+            #   (졸린 눈은 거의 일자, 웃는 눈은 눌러 감은 반원)
+            foreach ($sd in @(-1, 1)) {
+                $px = $cx + $sd * $ex
+                EyeArcSoft $px ($ey + 2) ($er * 1.02) 1.55 10
+                FillPath (EllipsePath ($px + $sd * 8) ($ey + 26) 8 11) $MP.tear
+                FillPath (EllipsePath ($px + $sd * 6) ($ey + 21) 3 3) $MP.white
+            }
+        }
+        'shy' {
+            # 눈을 내리깔고 시선을 피하는 모습 - 아래로 처진 얇은 반달
+            foreach ($sd in @(-1, 1)) { EyeArcSoft ($cx + $sd * $ex) ($ey + 12) ($er * 0.85) -0.30 5 }
         }
         'sleepy' {
-            foreach ($sd in @(-1, 1)) { EyeArcSoft ($cx + $sd * $ex) ($ey + 4) ($er * 0.92) -0.18 6 }
+            # 거의 일자에 가까운, 아주 얕은 처짐 - laugh 의 깊은 반원과 뚜렷이 다릅니다
+            foreach ($sd in @(-1, 1)) { EyeArcSoft ($cx + $sd * $ex) ($ey + 6) ($er * 0.92) -0.55 5 }
+            # 눈 밑 그늘 - 피곤함의 신호
+            foreach ($sd in @(-1, 1)) {
+                GroundShadow ($cx + $sd * $ex) ($ey + 15) ($er * 0.78) 6 '#7FA37A' 0.30
+            }
         }
         default {
             $erx = $er * 0.94; $ery = $er
@@ -348,19 +388,46 @@ function Draw-Face([double]$cx, [double]$hcy, [double]$hrx, [double]$hry,
                 (Pt ($cx + $hrx * 0.25) ($my + 1)), (Pt $cx ($my + 9))
             ) 0.5) $MP.white
     }
-    else {
-        $amp = 22.0
-        if ($face -eq 'sad' -or $face -eq 'angry') { $amp = -16.0 }
-        if ($face -eq 'sleepy' -or $face -eq 'shy') { $amp = 8.0 }
+    elseif ($face -eq 'happy') {
+        # 자는 얼굴과 헷갈리지 않도록 다문 곡선이 아니라 [b]살짝 벌어진 웃음[/b]으로.
+        # laugh 보다 작고, 눈물 · 혀 없이 하양만 살짝 보입니다.
+        $mo = BlobPath @(
+            (Pt ($cx - $hrx * 0.30) ($my - 2)), (Pt $cx ($my - 8)),
+            (Pt ($cx + $hrx * 0.30) ($my - 2)), (Pt $cx ($my + 16))
+        ) 0.5
+        FillPath $mo $MP.mouthIn
+        FillPath (BlobPath @(
+                (Pt ($cx - $hrx * 0.21) ($my - 3)), (Pt $cx ($my - 7)),
+                (Pt ($cx + $hrx * 0.21) ($my - 3)), (Pt $cx ($my + 4))
+            ) 0.5) $MP.white
+    }
+    elseif ($face -eq 'shy') {
+        # 당황해서 어쩔 줄 모르는 물결 입. 웃는 곡선이 아니라 지그재그입니다 -
+        # 그래야 "부끄러움"이 "기쁨"으로 안 읽힙니다.
         CurveStroke @(
-            (Pt ($cx - $hrx * 0.60) ($my - $amp * 0.45)),
+            (Pt ($cx - 15) ($my + 1)), (Pt ($cx - 6) ($my - 5)), (Pt $cx ($my + 3)),
+            (Pt ($cx + 6) ($my - 5)), (Pt ($cx + 15) ($my + 1))
+        ) '#6B5344' 5 0.3
+    }
+    elseif ($face -eq 'sleepy') {
+        # 하품하듯 살짝 벌어진 작은 입. 미소 곡선이 아니라 둥근 구멍이라
+        # "웃는 게 아니라 나른하다"가 바로 읽힙니다.
+        FillPath (EllipsePath $cx ($my + 7) 9 7) $MP.mouthIn
+    }
+    else {
+        # 무표정(normal) 은 하루 대부분을 차지하는 얼굴입니다. 너무 깊이 웃으면
+        # "가만히 서 있는데도 씩 웃고 있다"로 보이므로 얕고 부드러운 곡선만 씁니다.
+        $amp = 10.0; $mw = 0.52
+        if ($face -eq 'sad' -or $face -eq 'angry') { $amp = -16.0; $mw = 0.60 }
+        CurveStroke @(
+            (Pt ($cx - $hrx * $mw) ($my - $amp * 0.45)),
             (Pt $cx ($my + $amp)),
-            (Pt ($cx + $hrx * 0.60) ($my - $amp * 0.45))
-        ) '#6B5344' 7 0.5
-        # 맹순이의 앞니 - 정체성이라 웃는 얼굴에서 유지합니다 (경계선 없이 한 덩어리)
-        if ((-not $isBoy) -and ($face -eq 'normal' -or $face -eq 'happy')) {
-            $ty = $my + $amp - 4
-            FillPath (RoundRectPath ($cx - 21) $ty 42 29 10) $MP.white
+            (Pt ($cx + $hrx * $mw) ($my - $amp * 0.45))
+        ) '#6B5344' 7 0.6
+        # 맹순이의 앞니 - 정체성이라 무표정에서도 유지합니다 (경계선 없이 한 덩어리)
+        if ((-not $isBoy) -and $face -eq 'normal') {
+            $ty = $my + $amp - 2
+            FillPath (RoundRectPath ($cx - 16) $ty 32 20 8) $MP.white
         }
     }
 }
@@ -378,4 +445,86 @@ function EyeArcSoft([double]$cx, [double]$cy, [double]$rx, [double]$slope, [doub
         $pts += (Pt ($cx + $t * $rx) ($cy + [math]::Abs($t) * $rx * $slope * -0.55 + $thick))
     }
     FillPath (BlobPath $pts 0.3) $MP.eye
+}
+
+# ============================================================
+#  침대에 누웠을 때 - 이불 밖으로 얼굴만 내놓은 모습
+# ------------------------------------------------------------
+#  ★ 예전에는 서 있는 그림을 통째로 90도 돌렸습니다. 몸이 옆으로 길게
+#    누워 보여서 "침대에 가로로 누워있다"는 지적을 받았습니다.
+#    이제는 몸을 아예 그리지 않습니다. 이불 밖으로 [b]얼굴만[/b] 내놓은
+#    정면 모습이고, 나머지는 이불색 둔덕으로 덮습니다. 베개에 머리를 대고
+#    천장을 보는 자세이므로 서 있을 때와 같은 정면 얼굴을 그대로 씁니다.
+#
+#  ★ 머리 크기는 $MG 표준값(hrx=112, hry=99) 그대로 씁니다. 눈·코·입은
+#    Draw-Face 안에서 $MG.eyeR 처럼 [b]고정 절대값[/b]을 쓰기 때문에,
+#    머리만 따로 축소해서 그리면 눈이 머리에 비해 커져 버립니다.
+#    그래서 300x300 캔버스에 표준 크기로 그린 다음, 정사각형이라
+#    가로세로 같은 비율(0.64)로 통째로 축소해서 192 프레임에 넣습니다.
+# ============================================================
+function Draw-LieHead([string]$who) {
+    $isBoy = ($who -eq 'mengdol')
+    $cx = 150.0; $hcy = 128.0
+    $hrx = $MG.headRx; $hry = $MG.headRy
+
+    # --- 이불 둔덕 (얼굴 아래쪽을 덮습니다. 방의 이불과 같은 계열 색)
+    # 방의 이불(build_room_iso.ps1 의 $C3.quilt*)과 [b]똑같은 색[/b]입니다 -
+    # 다른 색이면 "이 이불이 그 이불이 맞나" 하는 어색함이 생깁니다.
+    $quiltF = '#A2BE93'; $quiltT = '#BDD6AC'; $quiltS = '#8CA880'
+    $mound = BlobPath @(
+        (Pt -10 300), (Pt -10 234),
+        (Pt ($cx - 96) 202), (Pt ($cx - 30) 222),
+        (Pt $cx 208), (Pt ($cx + 30) 222), (Pt ($cx + 96) 202),
+        (Pt 310 234), (Pt 310 300)
+    ) 0.45
+    FillPath $mound $quiltF
+    ShadeTopOnly $mound $quiltT ($cx - 30) 216
+    PushClip $mound
+    GroundShadow ($cx + 60) 262 130 40 $quiltS 0.5
+    PopClip
+    CurveStroke @((Pt ($cx - 84) 234), (Pt ($cx - 16) 222), (Pt ($cx + 46) 230)) $quiltS 3 0.5
+
+    # --- 머리 (Draw-Char 의 머리 모양과 똑같습니다 - 다른 프레임과 통일감)
+    $hp = @(
+        (Pt ($cx - $hrx * 0.46) ($hcy - $hry * 0.94)),
+        (Pt ($cx - $hrx * 0.86) ($hcy - $hry * 0.62)),
+        (Pt ($cx - $hrx * 1.00) ($hcy - $hry * 0.06)),
+        (Pt ($cx - $hrx * 0.88) ($hcy + $hry * 0.54)),
+        (Pt ($cx - $hrx * 0.48) ($hcy + $hry * 0.94)),
+        (Pt $cx ($hcy + $hry * 1.00)),
+        (Pt ($cx + $hrx * 0.48) ($hcy + $hry * 0.94)),
+        (Pt ($cx + $hrx * 0.88) ($hcy + $hry * 0.54)),
+        (Pt ($cx + $hrx * 1.00) ($hcy - $hry * 0.06)),
+        (Pt ($cx + $hrx * 0.86) ($hcy - $hry * 0.62)),
+        (Pt ($cx + $hrx * 0.46) ($hcy - $hry * 0.94)),
+        (Pt $cx ($hcy - $hry * 0.86))
+    )
+    $head = BlobPath $hp 0.42
+    DropShadow $head 0 6 '#6B5344' 0.12 4
+    FillPath $head $MP.skin
+    ShadeTopOnly $head $MP.skinLit ($cx - $hrx * 0.26) ($hcy - $hry * 0.52)
+    PushClip $head
+    GroundShadow ($cx - $hrx * 0.18) ($hcy - $hry * 0.82) ($hrx * 0.52) ($hry * 0.34) '#DCEFD2' 0.55
+    PopClip
+    PushClip $head
+    FillPath (EllipsePath $cx ($hcy + $hry * 0.92) ($hrx * 0.76) ($hry * 0.42)) $MP.cream
+    PopClip
+    Draw-Face $cx $hcy $hrx $hry 'sleepy' $isBoy $head
+
+    # --- 맹순이 리본 (누워도 정체성 유지)
+    if (-not $isBoy) {
+        $ry0 = $hcy - $hry * 0.92
+        foreach ($sd in @(-1, 1)) {
+            $lp2 = BlobPath @(
+                (Pt ($cx + $sd * 14) $ry0),
+                (Pt ($cx + $sd * 44) ($ry0 - 30)),
+                (Pt ($cx + $sd * 68) ($ry0 - 6)),
+                (Pt ($cx + $sd * 48) ($ry0 + 22)),
+                (Pt ($cx + $sd * 16) ($ry0 + 14))
+            ) 0.55
+            FillPath $lp2 $MP.ribbon
+            ShadeTopOnly $lp2 '#F4C6CD' ($cx + $sd * 40) ($ry0 - 12)
+        }
+        FillPath (EllipsePath $cx ($ry0 + 5) 17 16) $MP.ribbonShd
+    }
 }
