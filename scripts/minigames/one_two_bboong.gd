@@ -13,9 +13,14 @@ extends Node2D
 ##     실제 사건이 원래 이 구조라서 소재와 장르가 그대로 포개집니다.
 ##
 ## [b]화면[/b]
-##   미니게임 화면은 카메라가 움직이지 않습니다. 배경(640x270)을 x=-80 에 놓아
-##   기준 화면(480x270) 가운데에 욕실이 오게 하고, 남는 좌우는 화면이 더 넓은
-##   기기에서 벽 타일이 계속 이어져 보이도록 쓰입니다.
+##   미니게임 화면은 카메라가 움직이지 않습니다. 배경(1280x660)을 (-40, -100) 에
+##   놓아 기준 화면(960x540) 안에 그림의 x 40~1000, y 100~640 이 오게 합니다.
+##   남는 좌우는 아이폰(19.5:9)처럼 화면이 더 넓은 기기에서 욕실이 계속
+##   이어져 보이도록 쓰입니다.
+##
+##   두 사람이 서는 자리는 배경과 [b]같은 투영식[/b]으로 잡았습니다.
+##       sx = 30 + x + z * 0.18,  sy = 648 - z * 0.54 - h     (배경 그림 기준)
+##   맹순이 x=364, 맹돌이 x=554, 둘 다 z=200 (발매트 위) 입니다.
 
 # ============================================================
 #  ★ 대사는 전부 여기 있습니다. 고칠 땐 여기만 보면 됩니다.
@@ -44,11 +49,11 @@ const SHOUT_BBOONG := "뿡!"
 const SHOUT_WHAT := "뿡?!"
 
 # 두 사람이 서는 자리
-const MENGDOL_POS := Vector2(300, 214)
-const MENGSOON_POS := Vector2(196, 214)
+const MENGDOL_POS := Vector2(580, 440)
+const MENGSOON_POS := Vector2(390, 440)
 
 ## 방귀가 나오는 자리 (맹순이 기준). 구름 그림의 꼬리 끝이 여기 붙습니다.
-const BBOONG_FROM := Vector2(-16, -6)
+const BBOONG_FROM := Vector2(-34, -36)
 
 @onready var mengdol: Sprite2D = $Cast/Mengdol
 @onready var mengsoon: Sprite2D = $Cast/Mengsoon
@@ -161,7 +166,7 @@ func _jab(who: Sprite2D, pose_key: String, text: String, sound: AudioStream) -> 
 	_shout(text, Color(1, 0.95, 0.8))
 	# 주먹을 뻗을 때 몸이 살짝 앞으로 나갔다 돌아온다
 	var punch := create_tween()
-	punch.tween_property(who, "position:y", who.position.y - 3.0, 0.07)
+	punch.tween_property(who, "position:y", who.position.y - 6.0, 0.07)
 	punch.tween_property(who, "position:y", who.position.y, 0.13)
 	await get_tree().create_timer(0.55).timeout
 
@@ -203,7 +208,7 @@ func _shout(text: String, color: Color) -> void:
 
 
 func _pop_sparkle() -> void:
-	sparkle.position = mengdol.position + Vector2(0, -70)
+	sparkle.position = mengdol.position + Vector2(0, -200)
 	sparkle.visible = true
 	sparkle.scale = Vector2(0.4, 0.4)
 	sparkle.modulate.a = 1.0
@@ -216,7 +221,7 @@ func _pop_sparkle() -> void:
 func _shake(who: Sprite2D, seconds: float) -> void:
 	var home := who.position
 	var tw := create_tween().set_loops(int(seconds / 0.16))
-	tw.tween_property(who, "position:y", home.y - 3.0, 0.08)
+	tw.tween_property(who, "position:y", home.y - 6.0, 0.08)
 	tw.tween_property(who, "position:y", home.y, 0.08)
 
 

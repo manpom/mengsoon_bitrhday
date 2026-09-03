@@ -60,7 +60,7 @@ const MARK_STORY: Texture2D = preload("res://assets/sprites/ui/prompt_story.png"
 ## 조사했을 때 나올 대사. 한 줄이 대사창 한 번입니다.
 @export_multiline var lines: Array[String] = []
 ## 조사할 수 있을 때 뜨는 말풍선의 위치 (기준점에서 잰 값).
-@export var marker_offset: Vector2 = Vector2(0, -40)
+@export var marker_offset: Vector2 = Vector2(0, -80)
 
 var _sprite: Sprite2D
 var _marker: Sprite2D
@@ -124,7 +124,7 @@ func set_highlighted(on: bool) -> void:
 	# 말풍선이 위아래로 살짝 떠다니게
 	_marker.position = marker_offset
 	_marker_tween = create_tween().set_loops()
-	_marker_tween.tween_property(_marker, "position:y", marker_offset.y - 3.0, 0.5) \
+	_marker_tween.tween_property(_marker, "position:y", marker_offset.y - 6.0, 0.5) \
 		.set_trans(Tween.TRANS_SINE)
 	_marker_tween.tween_property(_marker, "position:y", marker_offset.y, 0.5) \
 		.set_trans(Tween.TRANS_SINE)

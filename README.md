@@ -16,68 +16,73 @@
 
 ## 0-1. 지금 어디까지 됐나
 
-**진행 중인 큰 작업 = "아트 전면 교체".** 원래 64×64 도트였던 게임을
-파스텔 3/4 디오라마 일러스트로 갈아엎는 중이고, **절반쯤 왔습니다.**
+**아트 전면 교체 = 화면 작업은 전부 끝났습니다.** 원래 64x64 도트였던 게임을
+파스텔 3/4 디오라마 일러스트로 갈아엎었고, 세 화면 모두 새 스타일·새 해상도입니다.
 
 | 부분 | 그림 | 씬 좌표 | 상태 |
 |---|---|---|---|
-| 맹돌이 방 (`mengdol_house`) | 새 스타일 | 새 해상도 | **✅ 끝. 실행 검증 완료** |
-| 캐릭터 프레임 25장 × 2명 | 새 스타일 | 192×192 | **✅ 끝** |
-| 욕실 컷신 (`one_two_bboong`) | 예전 도트 | 예전 480×270 | ❌ **다음 할 일 1** |
-| 리듬 파트 (`one_two_rhythm`) | 예전 도트 | 예전 480×270 | ❌ **다음 할 일 2** |
-| UI (대사창 · 느낌표 · 탭 마크) | 예전 도트 | 예전 크기 | ❌ **다음 할 일 3** |
+| 맹돌이 방 (`mengdol_house`) | 새 스타일 | 960x540 | **✅** |
+| 캐릭터 프레임 25장 x 2명 | 새 스타일 | 192x192 | **✅** |
+| 욕실 컷신 (`one_two_bboong`) | 새 스타일 | 960x540 | **✅** |
+| 리듬 파트 (`one_two_rhythm`) | 새 스타일 | 960x540 | **✅** |
+| UI (대사창 · 느낌표 · 탭 마크) | 새 스타일 | 2배 | **✅** |
 
-> ⚠️ **지금 게임을 실행하면 방은 멀쩡한데 글러브를 조사한 뒤(욕실·리듬)부터 화면이
-> 깨져 보입니다.** 배경이 480×270짜리 도트라서 960×540 화면에 작게 박힙니다.
-> 버그가 아니라 아직 안 한 작업입니다.
+세 씬 모두 `--import` 와 실행 검증에서 에러 0건입니다.
 
-**게임 로직은 건드리지 않았고, 앞으로도 건드리지 않습니다.** 이번 작업은 순수하게
-그림과 좌표만 바꾸는 것입니다.
+**게임 로직은 건드리지 않았습니다.** 리듬 판정·타이밍·채보는 그대로이고,
+바뀐 것은 그림과 좌표(전부 x2)뿐입니다.
+
+> 아직 안 해 본 것: **실제 아이폰에서 돌려보기.** 웹으로 한 번 내보내서
+> 폰트·터치·프레임·소리를 실기로 확인하는 게 다음 순서로 가장 값집니다.
 
 ## 0-2. 다음에 할 일 (이 순서대로)
 
-**1. 욕실 컷신 화면 새로 만들기**
-   - `tools/build_stage1.ps1`(도트) 을 대체할 `tools/build_stage1_iso.ps1` 을 새로 작성
-   - `_iso.ps1` 의 디오라마 문법으로 욕실을 그림: 타일 벽/바닥, 욕조, 세면대, 거울,
-     수건걸이, 샴푸통. 방(`build_room_iso.ps1`)과 **똑같은 카메라 값**을 써야 두 화면이
-     한 세계처럼 보입니다
-   - 결과 `bath_bg.png` 는 **1280×660** (방 배경과 동일 규격)
-   - `scenes/minigames/one_two_bboong.tscn` 의 모든 좌표를 **×2**, 폰트도 ×2
-
-**2. 리듬 파트 화면 새로 만들기**
-   - 판정 링 3개(좌/상/우), 글러브 노트, 맹순이 얼굴 노트, 방귀 구름, 반짝이
-   - 노트는 도트가 아니라 `_soft.ps1` 의 부드러운 덩어리로. 크기도 ×2
-   - `scenes/minigames/one_two_rhythm.tscn` 좌표 ×2
-   - ⚠️ **`scripts/minigames/one_two_rhythm.gd` 의 판정 로직·타이밍은 절대 건드리지 말 것.**
-     좌표와 텍스처만 바꿉니다
-   - ⚠️ `scripts/minigames/one_two_chart.gd` 는 **자동 생성 파일**입니다.
-     직접 고치지 말고 `tools/build_bgm.ps1` 을 고쳐서 다시 구우세요
-
-**3. UI 2배로**
-   - `prompt.png`(하양 느낌표) · `prompt_story.png`(노랑 느낌표) · `tap.png` 를
-     새 스타일로 2배 크기 재생성
-   - 대사창(`scenes/ui/dialogue_box.tscn`) 크기·폰트 크기 ×2
-   - 폰트 크기는 **11의 배수**로 (Galmuri11 은 11px 격자 폰트라 22 · 33 이 가장 깨끗)
-
-**4. (사용자 작업) 웹 내보내기 설정** — 아래 16번 항목 참고
+**1. (사용자 작업) 웹 내보내기 설정** — 자세한 건 아래 16장
    - Web 프리셋에서 **Thread Support 끄기** (iOS Safari 는 SharedArrayBuffer 를 못 씀)
    - 안 쓰는 폰트 2개 제외해서 7.3MB 절약: `Galmuri11-Bold.ttf`, `Galmuri9.ttf`
+   - 내보낸 뒤 아이폰 사파리에서 한 번 돌려보기
 
-**5. 그 다음 (아직 시작 안 함)**
-   - 미니게임 2~5 · 사진 앨범 화면 · 저장 시스템
-   - 방 벽의 빈 액자 5개(액자 하나 = 미니게임 하나)는 **사용자가 나중에 지시**한다고 해서
-     지금은 일부러 안 그려 놨습니다
+**2. 미니게임 2~5**
+   - 방 안의 물건 하나를 `STORY` 로 바꾸고 `mengdol_house.gd` 의 `MINIGAMES` 에
+     한 줄 추가하면 연결됩니다 (7장 참고)
+   - 무대 그림은 `build_stage1_iso.ps1` 을 복사해서 시작하는 게 가장 빠릅니다.
+     **카메라 값(`Set-Camera 648.0 0.54 0.18 30.0`)은 반드시 그대로 두세요.**
+     장소가 달라져도 시점이 같아야 한 세계로 보입니다
 
+**3. 사진 앨범 · 저장 시스템**
+   - `GameState.unlock_photo()` 는 이미 돌아갑니다. 미니게임 1 을 클리어하면
+     사진 2장이 들어옵니다. 그걸 [b]보여주는 화면[/b]이 아직 없습니다
+   - 저장은 `GameState.flags` / `photos` 를 `user://` 에 JSON 으로
+
+**4. 방 벽의 액자 5개**
+   - 사용자가 "나중에 다시 얘기하겠다"고 해서 지금은 일부러 안 그려 놨습니다.
+     지시가 오면 `build_room_iso.ps1` 의 뒷벽에 추가하면 됩니다
+
+### 손보면 좋은 것 (급하지 않음)
+
+- **누운 프레임** — 지금은 서 있는 그림을 90도 돌린 것이라 침대(3/4)와 각도가
+  안 맞아 머리가 머리판에 살짝 겹칩니다. 0-4 ③ 참고
+- **틸트시프트** — 지금은 미리보기에만 겁니다. 화면 셰이더로 넣으면 게임에서도
+  "작은 모형" 느낌이 납니다
+- **방 BGM** — 지금은 미니게임 1 에만 음악이 있습니다
 ## 0-3. 그림 다시 굽는 법
 
 전부 PowerShell + System.Drawing 으로 그립니다. **외부 에셋이 하나도 없습니다.**
 그림을 고치려면 PNG 를 열지 말고 아래 스크립트를 고친 뒤 다시 구우세요.
 
 ```bash
-powershell -ExecutionPolicy Bypass -File tools\build_room_iso.ps1   # 방 배경 + 이불
-powershell -ExecutionPolicy Bypass -File tools\build_char_soft.ps1  # 캐릭터 25장 x 2명
-powershell -ExecutionPolicy Bypass -File tools\build_sfx.ps1        # 효과음
-powershell -ExecutionPolicy Bypass -File tools\build_bgm.ps1        # 음악 + 채보
+powershell -ExecutionPolicy Bypass -File tools\build_room_iso.ps1    # 방 배경 + 이불
+powershell -ExecutionPolicy Bypass -File tools\build_char_soft.ps1   # 캐릭터 25장 x 2명
+powershell -ExecutionPolicy Bypass -File tools\build_stage1_iso.ps1  # 욕실 + 방귀 + 노트 · 링
+powershell -ExecutionPolicy Bypass -File tools\build_ui_soft.ps1     # 느낌표 · 탭 마크
+powershell -ExecutionPolicy Bypass -File tools\build_sfx.ps1         # 효과음
+powershell -ExecutionPolicy Bypass -File tools\build_bgm.ps1         # 음악 + 채보
+```
+
+굽고 나면 Godot 에 다시 읽히세요. 에디터를 켜 두면 자동으로 됩니다.
+
+```bash
+"C:\Users\POM\Desktop\pom\AI\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe" --headless --path . --import
 ```
 
 ### 살아 있는 도구 (새 파이프라인)
@@ -89,18 +94,20 @@ powershell -ExecutionPolicy Bypass -File tools\build_bgm.ps1        # 음악 + �
 | `tools/_meng_soft.ps1` | **캐릭터 그리는 함수** `Draw-Char`. 표정·포즈·방향을 인자로 받음 |
 | `tools/build_room_iso.ps1` | 방 배경(`room_iso.png`) + 이불 오버레이(`quilt_overlay.png`) |
 | `tools/build_char_soft.ps1` | 캐릭터 프레임 25장 × 2명 굽기 |
+| `tools/build_stage1_iso.ps1` | 욕실 배경 · 방귀 구름 · 반짝이 · 노트 · 판정 링 |
+| `tools/build_ui_soft.ps1` | 느낌표 마커 2종 · 탭 마크 |
 | `tools/build_sfx.ps1` · `build_bgm.ps1` | 소리 (아트 교체와 무관. 그대로 씀) |
 
-### 죽은 도구 (예전 도트 시절. 참고만 하고 쓰지 마세요)
+### 죽은 도구 (예전 도트 시절. 지우지는 않았지만 쓰지 마세요)
 
 `_pixlib.ps1` · `_draw.ps1` · `build64.ps1` · `build_char.ps1` · `build_room.ps1` ·
 `build_room_soft.ps1` · `build_stage1.ps1` · `generate_sprites.ps1` ·
 `zoom.ps1` · `variants.ps1` · `concepts.ps1` · `concepts_soft.ps1` · `preview_room_soft.ps1`
 
-> `build_stage1.ps1` 만은 **다음 할 일 1** 에서 내용을 참고해야 합니다.
-> 욕실에 뭐가 들어가야 하는지, 방귀 구름을 어떻게 그렸는지가 거기 적혀 있습니다.
+> 이 중 `build_room.ps1` 과 `build_stage1.ps1` 은 예전 UI·무대 그림까지 같이
+> 굽습니다. **실수로 돌리면 새로 만든 PNG 를 도트로 덮어씁니다.** 조심하세요.
 
-## 0-4. 꼭 알아야 할 규칙 3개
+## 0-4. 꼭 알아야 할 규칙 4개
 
 ### ① 해상도 — 480×270 → **960×540**
 
@@ -138,6 +145,23 @@ sy = 648 - z * 0.54 - h
 > 알려진 미흡한 점: 침대는 3/4로 그려졌는데 누운 캐릭터만 납작해서 머리가 머리판에
 > 살짝 겹칩니다. 나중에 **누운 전용 프레임**(머리는 베개, 몸은 발치로 물러나는 투영)을
 > 따로 그리면 확실히 좋아집니다. 급하진 않습니다.
+
+### ④ 미니게임 화면은 배경을 (-40, -100) 에 놓습니다
+
+미니게임에는 카메라가 없습니다. 그래서 1280×660 짜리 배경 그림 중
+**어디를 보여줄지를 스프라이트 위치로 정합니다.**
+
+```
+Bg.position = Vector2(-40, -100)      ← centered = false
+```
+그러면 기준 화면 960×540 안에 그림의 **x 40~1000, y 100~640** 이 들어옵니다.
+캔버스를 화면보다 크게(1280) 잡아 둔 것은 아이폰(19.5:9)처럼 화면이 더 넓을 때
+좌우로 배경이 계속 이어져 보이게 하기 위해서입니다. `expand` 스트레치가
+좌우를 더 보여주는데, 거기가 흰 여백이면 그대로 티가 납니다.
+
+캐릭터가 설 자리는 배경과 **같은 투영식**(②)으로 계산한 뒤 `-40, -100` 을 빼면 됩니다.
+컷신의 두 사람은 x=364 / x=554, 둘 다 z=200 (발매트 위) 입니다.
+
 
 ## 0-5. PowerShell + System.Drawing 함정 모음 ★
 
@@ -256,8 +280,8 @@ mengsoon_bitrhday/
 │   │   ├── props/
 │   │   │   ├── room_iso.png       ← ★★ 방 배경 한 장 (1280x660). 가구가 다 그려져 있음
 │   │   │   └── quilt_overlay.png  ← ★ 이불. 캐릭터보다 앞에 그려져 "덮인" 것처럼 보임
-│   │   ├── stages/                ← 미니게임 무대 · 노트 ⚠ 아직 예전 도트
-│   │   └── ui/                    ← 느낌표 · 탭 마크 ⚠ 아직 예전 도트
+│   │   ├── stages/                ← 욕실 · 방귀 · 노트 · 링 (build_stage1_iso.ps1)
+│   │   └── ui/                    ← 느낌표 · 탭 마크 (build_ui_soft.ps1)
 │   └── themes/pixel_ui.tres       ← 모든 UI 의 기본 테마 (폰트 지정)
 │
 ├── scenes/
@@ -266,8 +290,8 @@ mengsoon_bitrhday/
 │   ├── levels/mengdol_house.tscn  ← ★★ 게임 시작 씬
 │   ├── ui/dialogue_box.tscn       ← 대사창 (Autoload)
 │   └── minigames/
-│       ├── one_two_bboong.tscn    ← 미니게임 1 도입 컷신 ⚠ 아직 예전 좌표
-│       └── one_two_rhythm.tscn    ← 미니게임 1 리듬 파트 ⚠ 아직 예전 좌표
+│       ├── one_two_bboong.tscn    ← 미니게임 1 도입 컷신
+│       └── one_two_rhythm.tscn    ← 미니게임 1 리듬 파트
 │
 ├── scripts/
 │   ├── core/game_state.gd         ← 진행 상태 (Autoload)
@@ -290,7 +314,8 @@ mengsoon_bitrhday/
     ├── build_char_soft.ps1         ★ 캐릭터 25장 x 2명
     ├── build_sfx.ps1               ★ 효과음 WAV 합성
     ├── build_bgm.ps1               ★ 음악 + 채보 같이 굽기
-    ├── build_stage1.ps1            (도트) 욕실·노트. 새로 만들 때 내용 참고용
+    ├── build_stage1_iso.ps1        ★ 욕실 + 방귀 + 노트 · 링
+    ├── build_ui_soft.ps1           ★ 느낌표 · 탭 마크
     └── 나머지 *.ps1 · art/         (도트) 폐기됨
 ```
 
@@ -615,10 +640,10 @@ func _on_story_triggered(prop: Node) -> void:
 
 ```
             [뿡]  스페이스
-              ○  (240, 96)
+              ○  (480, 192)
 
-  [원] ←                        → [투]
-   ○ (110,176)    맹돌이     ○ (370,176)
+  [원] ←                          → [투]
+   ○ (220,352)     맹돌이      ○ (740,352)
 ```
 
 | 레인 | 노트 그림 | 키 | 맞히면 |

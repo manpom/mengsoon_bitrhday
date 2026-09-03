@@ -49,13 +49,13 @@ const Chart := preload("res://scripts/minigames/one_two_chart.gd")
 ## 레인마다 거리가 다르므로 속도가 아니라 [b]시간[/b]을 고정합니다.
 ## 그래야 어느 레인이든 "떨어지는 걸 보고 반응할 시간"이 똑같습니다.
 const APPROACH := 1.55
-const SPAWN_Y := -44.0
+const SPAWN_Y := -88.0
 
 ## 링 위치. Chart.LEFT / UP / RIGHT 순서와 같습니다.
 const RING_POS: Array[Vector2] = [
-	Vector2(110, 176),   # 왼쪽  - 원
-	Vector2(240, 96),    # 위    - 뿡
-	Vector2(370, 176),   # 오른쪽 - 투
+	Vector2(220, 352),   # 왼쪽  - 원
+	Vector2(480, 192),   # 위    - 뿡
+	Vector2(740, 352),   # 오른쪽 - 투
 ]
 
 ## 판정 창(초). 정박에서 얼마나 벗어났는지로 나눕니다.
@@ -67,11 +67,11 @@ const POINTS := { "GREAT": 100, "GOOD": 60, "COOL": 30 }
 
 ## 맹돌이는 위 링 바로 아래 가운데. 맹순이는 그보다 위(=뒤)에 서서 구경합니다.
 ## 셋 다 노트가 내려오는 세 줄(x = 110 / 240 / 370)을 비켜 있어야 합니다.
-const MENGDOL_HOME := Vector2(240, 240)
-const MENGSOON_HOME := Vector2(168, 196)
+const MENGDOL_HOME := Vector2(480, 480)
+const MENGSOON_HOME := Vector2(357, 408)
 
 ## 방귀가 나오는 자리 (맹돌이 기준). 구름 그림의 꼬리 끝이 여기 붙습니다.
-const BBOONG_FROM := Vector2(-16, -6)
+const BBOONG_FROM := Vector2(-34, -36)
 
 const POSE := {
 	"idle": preload("res://assets/sprites/characters/mengdol/mengdol_nude_lol.png"),
@@ -159,9 +159,9 @@ func _process(delta: float) -> void:
 	# 맹돌이는 박에 맞춰 통통 튑니다. 음악이 없을 때도 같은 박으로 흔들리게
 	# _time 만 보고 계산합니다.
 	_bob = _time * Chart.BPM / 60.0
-	var lift := absf(sin(_bob * PI)) * 4.0
+	var lift := absf(sin(_bob * PI)) * 8.0
 	mengdol.position.y = MENGDOL_HOME.y - lift
-	mengsoon.position.y = MENGSOON_HOME.y - absf(sin(_bob * PI * 0.5)) * 2.0
+	mengsoon.position.y = MENGSOON_HOME.y - absf(sin(_bob * PI * 0.5)) * 4.0
 
 	if _pose_timer > 0.0:
 		_pose_timer -= delta
@@ -344,7 +344,7 @@ func _fade_note(s: Node2D, hit: bool) -> void:
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tw.tween_property(s, "modulate:a", 0.0, 0.22)
 	else:
-		tw.tween_property(s, "position:y", s.position.y + 26.0, 0.35)
+		tw.tween_property(s, "position:y", s.position.y + 52.0, 0.35)
 		tw.tween_property(s, "modulate:a", 0.0, 0.35)
 	tw.chain().tween_callback(s.queue_free)
 
