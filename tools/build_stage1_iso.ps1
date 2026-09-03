@@ -168,7 +168,8 @@ FillPath (FaceFront ($wmid - 4) ($wmid + 4) $RZ1 $winB $winT) $B3.porcT
 $tX0 = 20.0; $tX1 = 300.0; $tZ0 = 118.0; $tZ1 = 300.0; $tH = 150.0
 CastShadow $tX0 $tZ0 $tX1 $tZ1 $tH 0.16
 Contact $tX0 $tZ0 $tX1 $tZ1 0.32
-Box3 $tX0 $tZ0 $tX1 $tZ1 0 $tH $B3.porcT $B3.porcF $B3.porcS | Out-Null
+$tubB = Box3 $tX0 $tZ0 $tX1 $tZ1 0 $tH $B3.porcT $B3.porcF $B3.porcS
+RimLight $tubB[1] '#FFFFFF' 2.6 0.30 0.32
 # 안쪽으로 파인 물통. 윗면 위에 한 겹 더 얹어서 "파였다"를 만듭니다.
 $bX0 = $tX0 + 24; $bX1 = $tX1 - 24; $bZ0 = $tZ0 + 20; $bZ1 = $tZ1 - 20
 $basin = FaceTop $bX0 $bZ0 $bX1 $bZ1 $tH
@@ -223,7 +224,8 @@ $sX0 = 660.0; $sX1 = 900.0; $sZ0 = 232.0; $sZ1 = 300.0; $sH = 170.0
 CastShadow $sX0 $sZ0 $sX1 $sZ1 $sH 0.16
 Contact $sX0 $sZ0 $sX1 $sZ1 0.30
 Box3 $sX0 $sZ0 $sX1 $sZ1 0 ($sH - 22) $B3.woodT $B3.woodF $B3.woodS | Out-Null
-Box3 ($sX0 - 10) ($sZ0 - 8) ($sX1 + 10) $sZ1 ($sH - 22) $sH $B3.porcT $B3.porcF $B3.porcS | Out-Null
+$vanT = Box3 ($sX0 - 10) ($sZ0 - 8) ($sX1 + 10) $sZ1 ($sH - 22) $sH $B3.porcT $B3.porcF $B3.porcS
+RimLight $vanT[0] '#FFFFFF' 2.4 0.30 0.85
 # 세면 볼
 $bw = P3 (($sX0 + $sX1) / 2) ((($sZ0 + $sZ1) / 2) - 4) $sH
 FillPath (EllipsePath $bw.X $bw.Y 78 42) $B3.porcS
@@ -397,12 +399,16 @@ Save-Soft (Join-Path $StageDir 'note_face.png')
 
 foreach ($v in @(@{ n = 'ring'; c = '#FFF3D2'; d = '#B7A7CE'; w = 8.0 },
         @{ n = 'ring_lit'; c = '#FFE06B'; d = '#FFF6D8'; w = 11.0 })) {
-    New-Soft 80 80
+    # ★ 캔버스가 80 이었을 때 가장 굵은 바깥 테(ring_lit: 반지름 33 + 선폭
+    #   21의 절반 10.5 = 43.5)가 캔버스 절반(40)을 넘어서 가장자리가
+    #   그대로 잘렸습니다. 104 로 넉넉히 잡아 어떤 굵기에서도 안 잘리게.
+    New-Soft 104 104
     # ★ 링은 어떤 배경 위에도 [b]타겟[/b]으로 보여야 합니다. 파스텔 배경에
     #   파스텔 링을 올리면 그냥 무늬가 되어 버리므로 짙은 테를 한 겹 깝니다.
-    StrokePath (EllipsePath 40 40 33 33) '#443B5C' ($v.w + 10)
-    StrokePath (EllipsePath 40 40 33 33) $v.d ($v.w + 5)
-    StrokePath (EllipsePath 40 40 33 33) $v.c $v.w
+    StrokePath (EllipsePath 52 52 33 33) '#443B5C' ($v.w + 10)
+    StrokePath (EllipsePath 52 52 33 33) $v.d ($v.w + 5)
+    StrokePath (EllipsePath 52 52 33 33) $v.c $v.w
+    RimLight (EllipsePath 52 52 33 33) '#FFFFFF' 2.2 0.4 0.55
     Save-Soft (Join-Path $StageDir ($v.n + '.png'))
 }
 

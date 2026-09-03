@@ -150,7 +150,8 @@ CornerDark $gl '#FFFFFF' 0.4 (P3 650 $RZ1 280).X (P3 650 $RZ1 280).Y 48 18
 FillPath (FaceFront (($wx0 + $wx1) / 2 - 5) (($wx0 + $wx1) / 2 + 5) ($RZ1 - 4) 200 370) $C3.woodF
 FillPath (FaceFront $wx0 $wx1 ($RZ1 - 4) 282 292) $C3.woodF
 # 창턱 + 작은 화분
-Box3 ($wx0 - 26) ($RZ1 - 22) ($wx1 + 26) ($RZ1 - 2) 184 196 $C3.woodT $C3.woodF $C3.woodS | Out-Null
+$sill = Box3 ($wx0 - 26) ($RZ1 - 22) ($wx1 + 26) ($RZ1 - 2) 184 196 $C3.woodT $C3.woodF $C3.woodS
+RimLight $sill[0] '#FFFFFF' 2.4 0.34 0.9
 Cyl3 ($wx0 + 60) ($RZ1 - 12) 16 196 226 $C3.potT $C3.potF $C3.potS
 foreach ($sl in @(@(-14, 40), @(2, 52), @(16, 38))) {
     $lp5 = BlobPath @(
@@ -214,7 +215,9 @@ FillPath $mat '#C9B79E'
 # --- 옷장
 CastShadow 330 236 470 290 300 0.24
 Contact 330 236 470 290 0.30
-Box3 330 236 470 290 0 300 $C3.woodT $C3.woodF $C3.woodS | Out-Null
+$wardT = Box3 330 236 470 290 0 300 $C3.woodT $C3.woodF $C3.woodS
+RimLight $wardT[0] '#FFFFFF' 3.0 0.30 0.85   # 윗면 앞쪽 모서리
+RimLight $wardT[1] '#FFFFFF' 2.6 0.20 0.35   # 앞면 위쪽 (윗면과 만나는 모서리)
 FillPath (FaceFront 340 396 235 16 288) $C3.woodDkF
 FillPath (FaceFront 404 460 235 16 288) $C3.woodDkF
 FillPath (EllipsePath (P3 397 234 152).X (P3 397 234 152).Y 5 13) '#C9C2B4'
@@ -231,7 +234,8 @@ FillPath (FaceFront 900 964 225 62 96) $C3.woodT                             # �
 FillPath (FaceFront 900 964 225 16 52) $C3.woodT
 FillPath (RoundRectPath ((P3 920 225 76).X) ((P3 920 225 76).Y) 24 7 3) '#C9C2B4'
 FillPath (RoundRectPath ((P3 920 225 32).X) ((P3 920 225 32).Y) 24 7 3) '#C9C2B4'
-Box3 760 220 980 292 104 120 $C3.woodT $C3.woodF $C3.woodS | Out-Null        # 상판
+$deskT = Box3 760 220 980 292 104 120 $C3.woodT $C3.woodF $C3.woodS          # 상판
+RimLight $deskT[0] '#FFFFFF' 2.8 0.32 0.85
 $dt = FaceTop 760 220 980 292 120
 CornerDark $dt '#F2DABA' 0.45 (P3 820 276 120).X (P3 820 276 120).Y 100 22
 
@@ -268,12 +272,14 @@ FillPath (FaceFront 822 890 125 120 184) $C3.woodDkF
 CastShadow 60 60 300 250 150 0.22
 Contact 60 60 300 250 0.34
 Box3 60 60 300 250 0 54 $C3.woodDkT $C3.woodDkF $C3.woodDkS | Out-Null       # 침대 틀
-Box3 60 232 300 250 0 150 $C3.woodT $C3.woodF $C3.woodS | Out-Null           # 머리판
+$headB = Box3 60 232 300 250 0 150 $C3.woodT $C3.woodF $C3.woodS             # 머리판
+RimLight $headB[1] '#FFFFFF' 2.4 0.22 0.32
 foreach ($sl2 in 92, 140, 188, 236) {
     FillPath (FaceFront ($sl2 - 7) ($sl2 + 7) 231 44 140) $C3.woodDkF
 }
 Box3 66 66 294 244 54 96 $C3.sheetT $C3.sheetF $C3.sheetS | Out-Null         # 매트리스
-Box3 74 176 286 236 96 126 $C3.pillowT $C3.pillowF $C3.pillowF | Out-Null    # 베개
+$pillow = Box3 74 176 286 236 96 126 $C3.pillowT $C3.pillowF $C3.pillowF     # 베개
+RimLight $pillow[0] '#FFFFFF' 2.6 0.30 0.8
 $pt2 = FaceTop 74 176 286 236 126
 CornerDark $pt2 '#E4D9C6' 0.5 (P3 180 190 126).X (P3 180 190 126).Y 90 24
 Box3 66 66 294 130 96 118 $C3.quiltT $C3.quiltF $C3.quiltS | Out-Null        # 이불

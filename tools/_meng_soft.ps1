@@ -108,9 +108,11 @@ function Draw-Char([hashtable]$o, [double]$cx = 230.0) {
         ) 0.5
         FillPath $arm $top
         ShadeTopOnly $arm $topLit $sx ($sy - 6)
+        RimLight $arm '#FFFFFF' 2.6 0.30 0.55
         $hand = EllipsePath $h[0] $h[1] 20 19
         FillPath $hand $MP.skin
         ShadeTopOnly $hand $MP.skinLit ($h[0] - 6) ($h[1] - 7)
+        RimLight $hand '#FFFFFF' 2.2 0.32 0.6
         PushClip $hand
         GroundShadow ($h[0] + 7) ($h[1] + 16) 18 12 $MP.skinShd 0.55
         PopClip
@@ -124,6 +126,7 @@ function Draw-Char([hashtable]$o, [double]$cx = 230.0) {
         $leg = RoundRectPath ($fx - 17) ($by1 - 16) 34 (40 - $lift) 16
         FillPath $leg $MP.skin
         ShadeTopOnly $leg $MP.skinLit $fx ($by1 - 8)
+        RimLight $leg '#FFFFFF' 2.4 0.28 0.6
         $foot = BlobPath @(
             (Pt ($fx - 28) ($fy - 12)), (Pt ($fx - 33) ($fy + 2)),
             (Pt ($fx - 13) ($fy + 13)), (Pt ($fx + 21) ($fy + 12)),
@@ -131,6 +134,7 @@ function Draw-Char([hashtable]$o, [double]$cx = 230.0) {
         ) 0.5
         FillPath $foot $MP.skin
         ShadeTopOnly $foot $MP.skinLit ($fx - 6) ($fy - 6)
+        RimLight $foot '#FFFFFF' 2.2 0.28 0.6
         PushClip $foot
         GroundShadow ($fx + 7) ($fy + 15) 28 13 $MP.skinShd 0.5
         PopClip
@@ -148,6 +152,7 @@ function Draw-Char([hashtable]$o, [double]$cx = 230.0) {
     ) 0.5
     FillPath $body $top
     ShadeTopOnly $body $topLit ($cx - $bw * 0.18) ($by0 + 16)
+    RimLight $body '#FFFFFF' 3.2 0.30 0.6
     PushClip $body
     GroundShadow ($cx + $bw * 0.10) ($by1 + 6) ($bw * 0.62) 28 $topShd 0.60
     GroundShadow ($cx + $bw * 0.46) (($by0 + $by1) / 2) 20 ($by1 - $by0) $topShd 0.35
@@ -178,6 +183,7 @@ function Draw-Char([hashtable]$o, [double]$cx = 230.0) {
         $hood = EllipsePath $cx ($by0 + $hoodDy) $hoodRx $hoodRy
         FillPath $hood $topShd
         ShadeTopOnly $hood $top $cx ($by0 + 6)
+        RimLight $hood '#FFFFFF' 2.4 0.26 0.6
     }
     else {
         $sk = BlobPath @(
@@ -187,6 +193,7 @@ function Draw-Char([hashtable]$o, [double]$cx = 230.0) {
         ) 0.45
         FillPath $sk $MP.skirt
         ShadeTopOnly $sk $MP.skirtLit ($cx - $bw * 0.18) ($by1 - 44)
+        RimLight $sk '#FFFFFF' 2.8 0.26 0.55
         PushClip $sk
         GroundShadow ($cx + $bw * 0.16) ($by1 + 10) ($bw * 0.66) 26 $MP.skirtShd 0.6
         PopClip
@@ -219,6 +226,7 @@ function Draw-Char([hashtable]$o, [double]$cx = 230.0) {
     DropShadow $head 0 8 '#6B5344' 0.12 4
     FillPath $head $MP.skin
     ShadeTopOnly $head $MP.skinLit ($cx - $hrx * 0.26) ($hcy - $hry * 0.52)
+    RimLight $head '#FFFFFF' 3.6 0.34 0.58
     PushClip $head
     GroundShadow ($cx - $hrx * 0.18) ($hcy - $hry * 0.82) ($hrx * 0.52) ($hry * 0.34) '#DCEFD2' 0.55
     PopClip
@@ -479,6 +487,7 @@ function Draw-LieHead([string]$who) {
     ) 0.45
     FillPath $mound $quiltF
     ShadeTopOnly $mound $quiltT ($cx - 30) 216
+    RimLight $mound '#FFFFFF' 3.0 0.24 0.85
     PushClip $mound
     GroundShadow ($cx + 60) 262 130 40 $quiltS 0.5
     PopClip
@@ -503,6 +512,7 @@ function Draw-LieHead([string]$who) {
     DropShadow $head 0 6 '#6B5344' 0.12 4
     FillPath $head $MP.skin
     ShadeTopOnly $head $MP.skinLit ($cx - $hrx * 0.26) ($hcy - $hry * 0.52)
+    RimLight $head '#FFFFFF' 3.6 0.34 0.58
     PushClip $head
     GroundShadow ($cx - $hrx * 0.18) ($hcy - $hry * 0.82) ($hrx * 0.52) ($hry * 0.34) '#DCEFD2' 0.55
     PopClip

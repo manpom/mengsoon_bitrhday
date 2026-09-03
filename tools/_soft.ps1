@@ -122,9 +122,32 @@ function StrokePath($path, [string]$hex, [double]$width) {
 function ShadeIn($path, [string]$lit, [string]$shade, [double]$atx, [double]$aty) {
     $b = $path.GetBounds()
     PushClip $path
-    GroundShadow $atx $aty ($b.Width * 0.74) ($b.Height * 0.62) $lit 0.80
-    GroundShadow ($b.X + $b.Width * 0.52) ($b.Y + $b.Height * 1.06) ($b.Width * 0.88) ($b.Height * 0.55) $shade 0.88
+    GroundShadow $atx $aty ($b.Width * 0.74) ($b.Height * 0.62) $lit 0.86
+    GroundShadow ($b.X + $b.Width * 0.52) ($b.Y + $b.Height * 1.06) ($b.Width * 0.88) ($b.Height * 0.55) $shade 0.92
     PopClip
+}
+
+# 물체 위쪽 가장자리가 빛을 받아 살짝 밝아지는 얇은 테두리.
+# ------------------------------------------------------------
+# ★ 광택(반짝이는 점)이 아니라 "가장자리가 빛을 받는다"는 신호입니다.
+#   전체 테두리에 두르면 싸구려 스티커처럼 보이므로, 빛이 오는 위쪽에만
+#   좁게 클립해서 긋습니다. 젤다 꿈꾸는 섬 · 알바 같은 "장난감 디오라마"가
+#   매끈하고 정교해 보이는 이유의 상당 부분이 이것 하나입니다 - 평평한
+#   색 위에 얇은 밝은 선 하나만 더해도 "깎아 만든 물건"처럼 보입니다.
+#
+#   $spread 를 크게 주면 옆면까지 걸치고, 작게 주면 정수리 부분만 좁게
+#   빛납니다. 둥근 덩어리(머리·몸통)는 0.55~0.65, 각진 상자(가구 윗면)는
+#   0.75~0.9 가 자연스럽습니다.
+function RimLight($path, [string]$hex = '#FFFFFF', [double]$width = 3.0, [double]$alpha = 0.42, [double]$spread = 0.60) {
+    $b = $path.GetBounds()
+    $clip = EllipsePath ($b.X + $b.Width * 0.5) ($b.Y + $b.Height * 0.02) ($b.Width * $spread) ($b.Height * $spread * 0.9)
+    PushClip $clip
+    $pen = New-Object System.Drawing.Pen((CA $hex $alpha), [single]$width)
+    $pen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
+    $script:SG.DrawPath($pen, $path)
+    $pen.Dispose()
+    PopClip
+    $clip.Dispose()
 }
 
 # ---------- 블러 · 틸트시프트 ----------
@@ -339,6 +362,6 @@ function Take-Soft {
 function ShadeTopOnly($path, [string]$lit, [double]$atx, [double]$aty) {
     $b = $path.GetBounds()
     PushClip $path
-    GroundShadow $atx $aty ($b.Width * 0.80) ($b.Height * 0.68) $lit 0.70
+    GroundShadow $atx $aty ($b.Width * 0.80) ($b.Height * 0.68) $lit 0.78
     PopClip
 }
