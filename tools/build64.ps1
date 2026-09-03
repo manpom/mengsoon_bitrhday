@@ -3,16 +3,16 @@
     [int]$Variant = 1,
     [string]$Out = '',
     # which way the character is facing
-    [ValidateSet('down', 'up', 'side')][string]$Dir = 'down',
+    [ValidateSet('down', 'up')][string]$Dir = 'down',
     # walk cycle: 0 = standing, 1 = left foot up, -1 = right foot up
     [int]$Step = 0,
-    # face expression (only drawn when Dir is down or side)
-    [ValidateSet('normal', 'happy', 'surprise', 'sad', 'angry', 'sleepy', 'shy')][string]$Face = 'normal',
+    # face expression (the back of the head has no face at all)
+    [ValidateSet('normal', 'happy', 'surprise', 'sad', 'angry', 'sleepy', 'shy', 'laugh')][string]$Face = 'normal',
     # no clothes - the bare frog body (memory 1 is set in a bathroom)
     [switch]$Nude,
     # what the body is doing. 'lie' ignores Dir/Step and draws the head
     # resting on a pillow with a shoulder stub, for the bed.
-    [ValidateSet('stand', 'guard', 'punch1', 'punch2', 'laugh', 'lie')][string]$Pose = 'stand'
+    [ValidateSet('stand', 'guard', 'punch1', 'punch2', 'laugh', 'fart', 'lie')][string]$Pose = 'stand'
 )
 
 # ASCII-only comments on purpose: PS 5.1 reads BOM-less UTF-8 as ANSI and a
@@ -113,6 +113,20 @@ function Stack($dst, $src) {
         for ($x = 0; $x -lt 64; $x++) { if ($src[$y][$x] -ne '.') { $dst[$y][$x] = $src[$y][$x] } }
     }
 }
+# 캔버스를 반시계로 90도 돌립니다.
+# 침대에 누운 그림에 씁니다: 앞얼굴을 그대로 돌리면 정수리가 왼쪽(머리맡),
+# 턱이 오른쪽(발치)을 향하고, 얼굴은 화면 위 = 천장을 봅니다.
+#   (x, y)  ->  (y, 63 - x)
+function Rotate-CCW($src) {
+    $dst = New-Canvas
+    for ($y = 0; $y -lt 64; $y++) {
+        for ($x = 0; $x -lt 64; $x++) {
+            if ($src[$y][$x] -ne '.') { P $dst $y (63 - $x) $src[$y][$x] }
+        }
+    }
+    return , $dst
+}
+
 # move a whole canvas. Used by the 'lie' pose to slide the head onto a pillow.
 function Shift-Canvas($src, [int]$dx, [int]$dy) {
     $dst = New-Canvas
@@ -123,6 +137,32 @@ function Shift-Canvas($src, [int]$dx, [int]$dy) {
     }
     return , $dst
 }
+# A solid closed-eye stroke. $slope > 0 curves up in the middle (^ ^),
+# $slope < 0 curves down (~ ~).
+#
+# Two things keep it a LINE instead of a row of dots:
+#   1. we walk over integer X, not over an offset. Eye centres land on .5
+#      (they sit on the eye bumps), and [math]::Round is banker's rounding, so
+#      stepping the offset makes Round() land on the same column twice and skip
+#      the next one entirely - that is exactly what made the old arc dotted.
+#   2. each column is bridged to the previous one, because Round() still moves
+#      a whole pixel at a time in Y and a 3px mark cannot reach across that.
+function EyeArc($cv, [double]$ex, [double]$ey, [double]$rx, [double]$slope, [int]$thick, [char]$ch) {
+    $prev = -999
+    $x0 = [int][math]::Floor($ex - $rx)
+    $x1 = [int][math]::Ceiling($ex + $rx)
+    for ($x = $x0; $x -le $x1; $x++) {
+        $y = [int][math]::Floor($ey + [math]::Abs($x - $ex) * $slope + 0.5)
+        $lo = $y; $hi = $y + $thick - 1
+        if ($prev -ne -999) {
+            if ($prev -lt $lo) { $lo = $prev }
+            if (($prev + $thick - 1) -gt $hi) { $hi = $prev + $thick - 1 }
+        }
+        for ($k = $lo; $k -le $hi; $k++) { if ((G $cv $x $k) -ne '.') { P $cv $x $k $ch } }
+        $prev = $y
+    }
+}
+
 # a thick rounded line - arms and legs are just this
 function Limb($cv, [double]$x0, [double]$y0, [double]$x1, [double]$y1, [double]$r, [char]$ch) {
     for ($i = 0; $i -le 18; $i++) {
@@ -227,15 +267,8 @@ function Draw-Head($cv, $c, [string]$teeth, [bool]$isBoy, [string]$dir = 'down',
     if ($face -eq 'happy') { $mouthScale = 1.7 }
     if ($face -eq 'sad' -or $face -eq 'angry') { $mouthSign = -1.0 }
     if ($face -eq 'sleepy') { $mouthScale = 0.4 }
-    # blushing / embarrassed: squeezed-shut eyes and a huge blush
-    if ($face -eq 'shy') {
-        $mouthScale = 0.3
-        $c = $c.Clone()
-        $c['blushDx'] = $c['blushDx'] * 0.92
-        $c['blushRx'] = $c['blushRx'] * 1.9
-        $c['blushRy'] = $c['blushRy'] * 2.2
-    }
-
+    # 부끄러움: 입은 작게 오므리고, 볼 대신 얼굴 전체가 달아오릅니다 (아래 blush 참고)
+    if ($face -eq 'shy') { $mouthScale = 0.3 }
     $mouthAt = {
         param([int]$x)
         $xc = $x
@@ -304,18 +337,34 @@ function Draw-Head($cv, $c, [string]$teeth, [bool]$isBoy, [string]$dir = 'down',
     $preEye = @()
     for ($y = 0; $y -lt 64; $y++) { $preEye += , ($cv[$y].Clone()) }
 
-    if ($face -eq 'happy' -or $face -eq 'shy') {
-        # ^ ^  : eyes squeezed shut. No eyeball, just two arcs.
-        # 'shy' uses a flatter arc so it reads as "looking away", not "laughing".
-        $slope = 0.6
-        if ($face -eq 'shy') { $slope = 0.25 }
+    if ($face -eq 'happy' -or $face -eq 'shy' -or $face -eq 'laugh') {
+        # A closed eye is one SOLID stroke, never a row of dots.
+        #   happy / laugh : ^ ^   arc pulled up in the middle
+        #   shy           : ~ ~   arc pushed down, "can't look at you"
+        # EyeArc bridges the gap between neighbouring columns, which is the
+        # whole trick - Round() jumps a full pixel at a time and a 2px mark
+        # cannot reach across that on its own, so it comes out dotted.
+        $slope = 0.6; $thick = 2
+        if ($face -eq 'laugh') { $slope = 0.85; $thick = 3 }
+        if ($face -eq 'shy') { $slope = -0.45; $thick = 3 }
         foreach ($e in @(@($elx, $lrx), @($erx, $c.eyeRx))) {
             $ex = $e[0]; $rx = $e[1]
-            for ($dx = - [int]$rx; $dx -le [int]$rx; $dx++) {
-                $by = [int][math]::Round($c.eyeCy + 2.0 + [math]::Abs($dx) * $slope)
-                for ($k = 0; $k -lt 2; $k++) {
-                    if ((G $cv ([int]($ex + $dx)) ($by + $k)) -ne '.') { P $cv ([int]($ex + $dx)) ($by + $k) 'K' }
+            $base = $c.eyeCy + 2.0
+            if ($face -eq 'shy') { $base = $c.eyeCy + 4.0 }
+            EyeArc $cv $ex $base ($rx + 0.5) $slope $thick 'K'
+        }
+        # 눈물이 핑 - 웃겨 죽겠을 때 눈꼬리에서 튀어나오는 눈물
+        if ($face -eq 'laugh') {
+            foreach ($e in @(@($elx, -1.0), @($erx, 1.0))) {
+                $ex = [int][math]::Round($e[0] + $e[1] * ($c.eyeRx + 2.5))
+                $ey = [int][math]::Round($c.eyeCy + 3.0)
+                for ($k = 0; $k -lt 5; $k++) {
+                    $tx = $ex + [int]($e[1] * ($k * 0.5))
+                    Rect $cv $tx ($ey + $k) ($tx + 1) ($ey + $k) '1'
                 }
+                Rect $cv $ex $ey ($ex + 1) ($ey + 1) 'W'
+                Ell $cv ($ex + $e[1] * 2.5) ($ey + 6.0) 2.2 2.6 '1'
+                P $cv ([int]($ex + $e[1] * 2.5)) ($ey + 5) 'W'
             }
         }
     }
@@ -389,14 +438,78 @@ function Draw-Head($cv, $c, [string]$teeth, [bool]$isBoy, [string]$dir = 'down',
     Rect $cv ([int](33 + $fdx)) $ny ([int](34 + $fdx)) ($ny + 1) 'Z'
 
     # -- blush
-    EllIn $cv (31.5 - $c.blushDx + $fdx) $c.blushCy $c.blushRx $c.blushRy 'S'
-    EllIn $cv (31.5 + $c.blushDx + $fdx) $c.blushCy $c.blushRx $c.blushRy 'S'
-
+    if ($face -eq 'shy') {
+        # 얼굴이 벌겋게 달아오릅니다. 반드시 좌우 대칭이어야 합니다.
+        #
+        # ★ 함정: 머리의 밑칠은 좌우 대칭이 아닙니다. Draw-Head 는 오른쪽
+        #   1/4 을 크림색(`c`)으로 덮어서 턱 그늘을 만듭니다. 그래서 "지금
+        #   무슨 색인지 보고 칠할 색을 고르면" 왼쪽은 빨강, 오른쪽은 주황이
+        #   되어 버립니다 - 오른쪽만 옅어 보이던 이유가 이것이었습니다.
+        #
+        #   그래서 칠할 색은 [b]밑칠이 아니라 좌표[/b]로 정합니다. 입선 아래이고
+        #   턱 타원 안이면 턱, 아니면 얼굴. 좌표는 좌우가 완전히 같으므로
+        #   왼쪽 절반만 계산해서 x 를 뒤집어 그대로 복사하면 됩니다.
+        $cxf = 31.5 + $fdx
+        $paint = {
+            param([int]$x, [int]$y, [char]$ch)
+            $mx = [int][math]::Round(2.0 * $cxf) - $x
+            foreach ($px in @($x, $mx)) {
+                $g = G $cv $px $y
+                # 눈 · 콧구멍 · 외곽선 · 빈칸은 건드리지 않습니다
+                if ($g -eq '.' -or $g -eq 'K' -or $g -eq 'W' -or $g -eq 'E' -or $g -eq 'Z') { continue }
+                P $cv $px $y $ch
+            }
+        }
+        for ($y = [int]($c.blushCy - 14); $y -le [int]($c.blushCy + 12); $y++) {
+            for ($x = [int]($cxf - 24); $x -le [int][math]::Floor($cxf); $x++) {
+                $dxw = ($x - $cxf) / 23.0
+                $dyw = ($y - ($c.blushCy - 3.5)) / 12.0
+                if ($dxw * $dxw + $dyw * $dyw -gt 1.0) { continue }
+                # 턱인가? (입선 아래 + 턱 타원 안) - 밑칠이 아니라 좌표로 판단
+                $jx = ($x - $cxf) / $c.jawRx
+                $jy = ($y - $c.jawCy) / $c.jawRy
+                if ($y -gt (& $mouthAt $x) -and ($jx * $jx + $jy * $jy) -le 1.0) {
+                    & $paint $x $y 'S'
+                    continue
+                }
+                $dxc = ($x - ($cxf - $c.blushDx)) / 8.0
+                $dyc = ($y - $c.blushCy) / 5.0
+                if ($dxc * $dxc + $dyc * $dyc -le 1.0) { & $paint $x $y 'k' }
+                else { & $paint $x $y 'j' }
+            }
+        }
+        # 볼마다 만화식 빗금 두 줄. 이것도 좌우가 거울처럼 뒤집힙니다.
+        foreach ($s in @(-3.0, 0.0)) {
+            for ($t = 0; $t -lt 6; $t++) {
+                $px = [int][math]::Floor($cxf - $c.blushDx + $s - $t * 0.45 + 0.5)
+                $py = [int][math]::Floor($c.blushCy - 2.5 + $t + 0.5)
+                if ((G $cv $px $py) -eq 'k') { & $paint $px $py 'W' }
+            }
+        }
+    }
+    else {
+        EllIn $cv (31.5 - $c.blushDx + $fdx) $c.blushCy $c.blushRx $c.blushRy 'S'
+        EllIn $cv (31.5 + $c.blushDx + $fdx) $c.blushCy $c.blushRx $c.blushRy 'S'
+    }
     # -- mouth
     if ($face -eq 'surprise') {
         # a small round "오!" instead of a smile
         EllIn $cv (31.5 + $fdx) ($c.mouthMid + 2.5) 4.0 4.5 'E'
         EllIn $cv (31.5 + $fdx) ($c.mouthMid + 2.5) 2.5 3.0 'z'
+    }
+    elseif ($face -eq 'laugh') {
+        # 푸하하 - 입을 크게 벌리고 웃는 입. 개구리라 넓지만, 턱 전체를
+        # 잡아먹으면 립스틱처럼 보여서 세로는 얕게 둡니다.
+        $mcy = $c.mouthMid + 2.6
+        EllIn $cv (31.5 + $fdx) $mcy 9.5 4.6 'E'
+        EllIn $cv (31.5 + $fdx) ($mcy + 0.3) 7.8 3.4 'q'
+        EllIn $cv (31.5 + $fdx) ($mcy + 2.4) 4.2 1.8 'r'      # 혀
+        for ($x = [int](22 + $fdx); $x -le [int](41 + $fdx); $x++) {   # 윗니
+            $ty = [int][math]::Floor($mcy - 2.4 + 0.5)
+            for ($k = 0; $k -lt 2; $k++) {
+                if ((G $cv $x ($ty + $k)) -eq 'q') { P $cv $x ($ty + $k) 'W' }
+            }
+        }
     }
     else {
         # 2px thick so it still reads at 1x
@@ -406,7 +519,6 @@ function Draw-Head($cv, $c, [string]$teeth, [bool]$isBoy, [string]$dir = 'down',
             if ((G $cv $x ($my - 1)) -ne '.') { P $cv $x ($my - 1) 'E' }
         }
     }
-
     # -- front teeth hanging off the smile into the jaw.
     #    mengsoon's are the big ones; mengdol gets a narrower pair.
     #    Only makes sense on a smiling face.
@@ -575,31 +687,40 @@ function Draw-BodyNude($cv, [string]$who, [int]$t0, [string]$pose, [int]$step) {
     #    snap the neck.
     Rect $cv 26 $t0 37 ($t0 + 3) 'V'                  # neck
     Ell $cv 31.5 ($t0 + 8) 13.5 8.5 'V'               # chest
-    Ell $cv 31.5 ($t0 + 16) 12.5 8.0 'V'              # hips
-    Rect $cv 19 ($t0 + 6) 44 ($t0 + 18) 'V'
+    Rect $cv 19 ($t0 + 6) 44 ($t0 + 13) 'V'
+    # 골반. 예전에는 이게 y58 까지 내려와서 다리 사이를 메워 버렸고,
+    # 그래서 하반신이 통짜 덩어리로 보였습니다. 이제 y51 에서 끝나고,
+    # 다리는 그 아래에서 확실하게 둘로 갈라집니다.
+    Ell $cv 31.5 ($t0 + 12) 12.0 5.5 'V'
 
-    # -- cream belly
-    Ell $cv 31.0 ($t0 + 12) 9.5 7.5 'C'
-    Ell $cv 34.5 ($t0 + 13) 6.5 5.5 'c'               # its shaded side
-
-    # -- light on top, shade down the right (same as the head)
-    Tint $cv 0 $t0 63 ($t0 + 3) 'L'
-    Tint $cv 42 $t0 63 ($t0 + 22) 'v'
-
-    # -- legs
+    # -- 다리. 허벅지는 굵고 종아리로 갈수록 가늘어집니다.
     $dyL = 0; $dyR = 0
     if ($step -eq 1) { $dyL = -2 }
     if ($step -eq -1) { $dyR = -2 }
-    Rect $cv 22 ($t0 + 16) 30 (57 + $dyL) 'V'
-    Rect $cv 33 ($t0 + 16) 41 (57 + $dyR) 'V'
-    Tint $cv 27 ($t0 + 18) 30 (57 + $dyL) 'v'
-    Tint $cv 38 ($t0 + 18) 41 (57 + $dyR) 'v'
+    foreach ($lg in @(@(26.5, $dyL, -1), @(36.5, $dyR, 1))) {
+        $lx = [double]$lg[0]; $dy = [int]$lg[1]; $sd = [int]$lg[2]
+        Ell $cv $lx ($t0 + 14.0) 4.5 4.5 'V'                       # 허벅지 위쪽
+        Rect $cv ([int]($lx - 4)) ($t0 + 14) ([int]($lx + 4)) (53 + $dy) 'V'
+        Rect $cv ([int]($lx - 3)) (53 + $dy) ([int]($lx + 3)) (58 + $dy) 'V'   # 종아리
+    }
+    # 다리 안쪽(그늘)과 바깥쪽(빛)
+    Tint $cv 29 ($t0 + 14) 31 58 'v'
+    Tint $cv 38 ($t0 + 14) 41 58 'v'
+
+    # -- cream belly (몸 밖으로 새지 않도록 EllIn 으로 자릅니다)
+    EllIn $cv 31.0 ($t0 + 11) 9.5 7.0 'C'
+    EllIn $cv 34.5 ($t0 + 12) 6.5 5.0 'c'             # its shaded side
+
+    # -- light on top, shade down the right (same as the head)
+    Tint $cv 0 $t0 63 ($t0 + 3) 'L'
+    Tint $cv 42 $t0 63 ($t0 + 18) 'v'
 
     # -- webbed feet, splayed outward
-    Ell $cv 24.0 (60 + $dyL) 9.0 3.5 'V'
-    Ell $cv 39.0 (60 + $dyR) 9.0 3.5 'V'
-    Tint $cv 42 (57 + $dyR) 49 63 'v'
-    foreach ($f in @(@(24, $dyL), @(39, $dyR))) {
+    Ell $cv 25.0 (60 + $dyL) 7.5 3.5 'V'
+    Ell $cv 38.0 (60 + $dyR) 7.5 3.5 'V'
+    Tint $cv 41 (57 + $dyR) 47 63 'v'
+    Tint $cv 31 57 32 63 'Z'                          # 두 발 사이 경계
+    foreach ($f in @(@(25, $dyL), @(38, $dyR))) {
         $fx = [int]$f[0]; $fd = [int]$f[1]
         Rect $cv ($fx - 3) (59 + $fd) ($fx - 3) (62 + $fd) 'Z'    # toe seams
         Rect $cv ($fx + 3) (59 + $fd) ($fx + 3) (62 + $fd) 'Z'
@@ -613,6 +734,8 @@ function Draw-BodyNude($cv, [string]$who, [int]$t0, [string]$pose, [int]$step) {
         'punch1' { $hL = @(6.0, 44.0); $hR = @(38.0, 40.0); $fistR = 5.5 }
         'punch2' { $hL = @(25.0, 40.0); $hR = @(57.0, 44.0); $fistR = 5.5 }
         'laugh' { $hL = @(24.0, 50.0); $hR = @(39.0, 50.0) }
+        # 뿡! 두 팔을 옆으로 활짝 (미니게임에서 몸을 살짝 굽히는 건 코드가 합니다)
+        'fart' { $hL = @(11.0, 41.0); $hR = @(52.0, 41.0) }
         default { $hL = @(14.0, 52.0); $hR = @(49.0, 52.0) }
     }
     Limb $cv $shLx $shY $hL[0] $hL[1] 3.2 'V'
@@ -648,19 +771,29 @@ $isBoy = ($Who -eq 'mengdol')
 
 $canvas = New-Canvas
 $headDx = 0; $headDy = 0
+$lieRotate = $false
 
 if ($Pose -eq 'lie') {
-    # Lying in bed, seen from the side: the head rests on the pillow at the
-    # left and only a shoulder shows to the right. Everything below the
-    # shoulder is under the quilt, so we simply do not draw it.
-    $headDx = -9; $headDy = 8
+    # 침대에 누운 그림.
+    #
+    # ★ 얼굴이 [b]천장[/b]을 봅니다.
+    #   침대는 옆에서 본 모습이라 머리맡이 왼쪽, 발치가 오른쪽입니다.
+    #   등을 대고 누우면 정수리가 왼쪽, 턱이 오른쪽을 향하고 얼굴은 위를
+    #   봅니다. 그래서 앞얼굴을 그린 뒤 [b]반시계로 90도 돌립니다[/b]
+    #   (Rotate-CCW). 눈 두 개가 위아래로 나란히 놓이는 게 정상입니다.
+    #
+    #   돌리지 않고 앞얼굴 그대로 두면 "누운 게 아니라 서 있는 얼굴을
+    #   침대에 얹어 놓은" 그림이 됩니다.
+    if ($isBoy) { $lTop = [char]'H'; $lTopS = [char]'h'; $lTopD = [char]'J' }
+    else { $lTop = [char]'F'; $lTopS = [char]'f'; $lTopD = [char]'i' }
+    $lieRotate = $true
+    $headDx = 2; $headDy = 4
     $torso = New-Canvas
-    Ell $torso 46 33 12.0 9.5 'H'       # shoulder
-    Rect $torso 36 25 62 42 'H'
-    Ell $torso 60 33 9.0 8.5 'H'        # upper arm rolled forward
-    Tint $torso 0 35 63 63 'h'          # underside in shadow
-    Rect $torso 34 24 48 31 'J'         # hood bunched behind the neck
-    Ell $torso 42 30 8.0 6.5 'J'
+    Rect $torso 30 22 63 42 $lTop            # 몸통 (발치 쪽으로 이어짐)
+    Ell $torso 41.0 32.0 12.0 10.5 $lTop     # 어깨
+    Tint $torso 0 34 63 63 $lTopS            # 아래쪽은 그늘
+    Ell $torso 34.0 32.0 8.5 10.0 $lTopD     # 목 뒤에 뭉친 후드
+    Ell $torso 58.0 44.0 4.5 4.0 'V'         # 이불 밖으로 나온 손
     Outline $torso 'E'
     Stack $canvas $torso
 }
@@ -677,6 +810,7 @@ else {
 $head = New-Canvas
 Draw-Head $head $cfg $teethMode $isBoy $Dir $Face
 Outline $head 'E'
+if ($lieRotate) { $head = Rotate-CCW $head }
 if ($headDx -ne 0 -or $headDy -ne 0) { $head = Shift-Canvas $head $headDx $headDy }
 Stack $canvas $head
 
@@ -684,6 +818,7 @@ if (-not $isBoy) {
     $bow = New-Canvas
     Draw-Bow $bow
     Outline $bow 'E'
+    if ($lieRotate) { $bow = Rotate-CCW $bow }
     if ($headDx -ne 0 -or $headDy -ne 0) { $bow = Shift-Canvas $bow $headDx $headDy }
     Stack $canvas $bow
 }

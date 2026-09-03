@@ -25,6 +25,25 @@ signal flag_changed(flag: String, value: Variant)
 var flags: Dictionary = {}
 
 
+
+## 해금한 사진 이름들. 미니게임을 클리어할 때마다 쌓입니다.
+## 나중에 맹돌이 방의 Frame1~Frame5 액자에 이걸 보고 걸면 됩니다.
+var photos: Array[String] = []
+
+## 사진이 새로 해금될 때. 액자 UI 가 이걸 듣고 갱신하면 됩니다.
+signal photo_unlocked(photo: String)
+
+
+func unlock_photo(photo: String) -> void:
+	if photos.has(photo):
+		return
+	photos.append(photo)
+	photo_unlocked.emit(photo)
+
+
+func has_photo(photo: String) -> bool:
+	return photos.has(photo)
+
 func set_flag(flag: String, value: Variant = true) -> void:
 	if flags.get(flag) == value:
 		return
@@ -43,3 +62,4 @@ func has_flag(flag: String) -> bool:
 ## 오프닝을 다시 보고 싶을 때 씁니다. (디버그용)
 func reset() -> void:
 	flags.clear()
+	photos.clear()

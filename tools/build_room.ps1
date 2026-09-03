@@ -192,56 +192,121 @@ Fill 6 85 56 3 '241710'              # the dark gap under the door
 Save-Img $PropDir 'door'
 
 # ============================================================
-#  bed_base.png - 132x66, seen FROM THE SIDE.
+#  bed_base.png - 156x104, seen FROM THE SIDE.
 #
-#  The whole room is drawn face-on: we look straight at the back wall, and
-#  the furniture is seen from the front. A bed drawn top-down (looking
-#  straight DOWN at the mattress) does not belong in that picture - it looks
-#  like it is standing on end. So the bed lies down like everything else:
+#  The whole room is drawn face-on, so the bed lies down like everything else:
 #  headboard on the left, pillow next to it, feet off to the right.
+#
+#  ★ Why it is this tall. The sleeper's face has to point at the CEILING, so
+#    mengdol_lie is the front face rotated 90 degrees - which makes the head
+#    34 wide and 48 TALL. The old bed had a 24px mattress; the head hung off
+#    it by half its height. The mattress is now 52px so a lying head sits on
+#    it properly. (Drawing the mattress top as a tall band is the usual RPG
+#    cheat: the bed is side-on, the sleeper is seen from above, and nobody
+#    notices as long as the mattress is deep enough to hold them.)
 # ============================================================
-Start-Prop 132 66
-Box 0 0 16 66 $WD_L $OUT             # headboard
-for ($y = 6; $y -lt 40; $y += 9) { Fill 4 $y 8 4 $WD_M }
-Box 116 16 16 50 $WD_L $OUT          # footboard
-Fill 14 26 106 6 $WD_M               # frame rail behind the mattress
-Box 12 24 110 24 $CREAM $CREAM_D     # mattress
-Fill 14 44 106 3 $CREAM_D            # its shaded underside
-Box 12 44 110 12 $WD_M $OUT          # bed frame under the mattress
-Box 18 16 38 20 $WHITE $CREAM_D      # pillow
-Fill 22 26 30 1 $CREAM_D             # a crease in the pillow
-Fill 4 56 8 10 $WD_D                 # legs
-Fill 120 56 8 10 $WD_D
+Start-Prop 156 104
+Box 0 0 18 104 $WD_L $OUT            # headboard
+for ($y = 8; $y -lt 66; $y += 11) { Fill 4 $y 10 5 $WD_M }
+Box 138 30 18 74 $WD_L $OUT          # footboard
+Fill 16 34 124 8 $WD_M               # frame rail behind the mattress
+Box 14 30 128 56 $CREAM $CREAM_D     # mattress
+Fill 16 78 124 6 $CREAM_D            # its shaded underside
+Fill 16 32 124 3 $WHITE              # a sheen along the top edge
+Box 14 82 128 14 $WD_M $OUT          # bed frame under the mattress
+Box 20 22 46 44 $WHITE $CREAM_D      # pillow
+Fill 25 42 36 1 $CREAM_D             # a crease in the pillow
+Fill 25 52 36 1 $CREAM_D
+Fill 4 96 10 8 $WD_D                 # legs
+Fill 142 96 10 8 $WD_D
 Save-Img $PropDir 'bed_base'
 
 # ============================================================
-#  bed_quilt.png - 82x30. Covers the sleeper from the chest down.
+#  bed_quilt.png - 96x56. Covers the sleeper from the chest down.
 #  Y-sort draws it in FRONT of the player, which is what sells
 #  "lying in bed" without needing a second character sprite.
+#
+#  ★ The folded-over sheet is the band down the LEFT edge, not across the top.
+#    The sleeper's head is at the left, so that is where a real quilt gets
+#    folded back - at the chest, next to the pillow. A band across the top
+#    reads as "the quilt is lying the wrong way round".
 # ============================================================
-Start-Img 82 30
-Box 0 4 82 26 $SAGE $SAGE_O          # quilt
-for ($x = 10; $x -lt 80; $x += 16) { Fill $x 6 1 22 $SAGE_D }
-Fill 2 16 78 1 $SAGE_D
-Fill 3 7 76 2 $SAGE_L                # top highlight
-Box 0 0 82 8 $CREAM $CREAM_D         # folded-over sheet
-Fill 0 26 82 4 $SAGE_O               # the edge hanging over the frame
+Start-Img 96 56
+Box 0 0 96 50 $SAGE $SAGE_O          # quilt
+for ($x = 22; $x -lt 94; $x += 18) { Fill $x 4 1 42 $SAGE_D }
+Fill 16 24 78 1 $SAGE_D
+Fill 17 3 76 3 $SAGE_L               # top highlight
+Box 0 0 16 50 $CREAM $CREAM_D        # folded-back sheet, at the pillow side
+Fill 4 4 8 42 $WHITE
+Fill 0 50 96 6 $SAGE_O               # the edge hanging over the frame
 Save-Img $PropDir 'bed_quilt'
 
 # ============================================================
-#  glove.png - 26x24. Boxing gloves on the floor: the trigger for
-#  memory 1 (the one-two incident).
+#  glove.png - 복싱 글러브 두 짝을 정면에서 본 모습. 추억 1 의 방아쇠라
+#  한눈에 "복싱 글러브"로 읽혀야 합니다.
+#
+#  글러브로 읽히게 하는 건 결국 이 네 가지입니다.
+#    1. 위가 둥글고 아래로 갈수록 좁아지는 주먹 덩어리
+#    2. 옆으로 튀어나온 엄지, 그리고 그 사이의 진한 골
+#    3. 손가락 마디를 가로지르는 곡선 한 줄
+#    4. 크림색 손목 밴드 + 구멍 + X 자로 엮인 끈
+#  네 개 중 하나라도 빠지면 그냥 빨간 덩어리로 보입니다.
 # ============================================================
-Start-Prop 30 24
-Box 3 6 16 17 'C4413F' '4A1614'      # back glove
-Box 0 2 18 19 'E05A52' '4A1614'      # front glove
-Oval 6 2 16 12 'E05A52'              # thumb bulge
-Fill 2 4 12 3 'F08A78'               # highlight
-Box 12 14 10 7 'D9C7A2' '6B4A31'     # wrist wrap
-Fill 20 16 9 3 'D9C7A2'              # the lace hanging out
-Fill 26 15 4 2 'D9C7A2'
-Save-Img $PropDir 'glove'
+$GL_R  = 'E4574D'   # 글러브 빨강
+$GL_RD = 'A83431'   # 그늘
+$GL_RM = 'C4433F'   # 중간톤
+$GL_RL = 'F7907F'   # 하이라이트
+$GL_O  = '3E1210'   # 외곽선
+$LC    = 'F2E6CC'   # 손목 밴드
+$LC_D  = 'BFA37A'
+$LC_O  = '6B4A31'
 
+# 한 짝. $dir = -1 이면 엄지가 왼쪽(왼손), +1 이면 오른쪽(오른손).
+function Mitt([int]$x, [int]$y, [int]$dir) {
+    if ($dir -lt 0) { $tx = $x - 6 } else { $tx = $x + 18 }
+
+    # --- 엄지 (주먹보다 먼저 = 뒤에 깔림)
+    Oval $tx ($y + 9) 12 14 $GL_O
+    Oval ($tx + 1) ($y + 10) 10 12 $GL_RM
+    Oval ($tx + 2) ($y + 10) 7 9 $GL_R
+
+    # --- 주먹. 위는 둥글고 아래로 좁아집니다.
+    Oval ($x - 1) ($y - 1) 28 26 $GL_O
+    Fill ($x + 1) ($y + 10) 24 14 $GL_O
+    Oval $x $y 26 24 $GL_R
+    Fill ($x + 2) ($y + 11) 22 12 $GL_R
+    Fill ($x + 3) ($y + 22) 20 2 $GL_R
+
+    # --- 명암: 왼쪽 위가 밝고 오른쪽 아래가 어둡습니다 (방 조명과 같은 방향)
+    Oval ($x + 9) ($y + 4) 18 20 $GL_RM
+    Fill ($x + 13) ($y + 12) 11 11 $GL_RM
+    Oval ($x + 15) ($y + 8) 12 16 $GL_RD
+    Fill ($x + 18) ($y + 14) 6 9 $GL_RD
+    Oval ($x + 3) ($y + 2) 11 8 $GL_RL
+    Fill ($x + 4) ($y + 2) 8 3 $GL_RL
+
+    # --- 손가락 마디를 가로지르는 골 한 줄. 이게 있어야 "쥔 주먹"이 됩니다.
+    Fill ($x + 2) ($y + 13) 22 1 $GL_O
+    Fill ($x + 3) ($y + 14) 20 1 $GL_RD
+    if ($dir -lt 0) { Fill ($x + 1) ($y + 9) 2 6 $GL_O } else { Fill ($x + 23) ($y + 9) 2 6 $GL_O }
+
+    # --- 손목 밴드 + 구멍 + X 자 끈
+    Box ($x + 3) ($y + 23) 20 11 $LC $LC_O
+    Fill ($x + 4) ($y + 31) 18 2 $LC_D
+    foreach ($ex in 7, 17) {
+        Fill ($x + $ex) ($y + 26) 2 2 $LC_O
+        Fill ($x + $ex) ($y + 29) 2 2 $LC_O
+    }
+    for ($k = 0; $k -lt 4; $k++) {
+        Fill ($x + 8 + $k * 2) ($y + 26 + $k) 2 1 $LC_D
+        Fill ($x + 16 - $k * 2) ($y + 26 + $k) 2 1 $LC_D
+    }
+}
+
+Start-Prop 66 36
+Mitt 8 0 -1
+Mitt 32 2 1
+Save-Img $PropDir 'glove'
 # ============================================================
 #  desk.png - 120x74, with a burnt-down candle and a closed book
 # ============================================================

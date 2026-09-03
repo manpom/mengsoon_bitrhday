@@ -36,7 +36,7 @@ if (-not (Test-Path $FrameDir)) { New-Item -ItemType Directory -Force -Path $Fra
 # 채택된 얼굴 옵션 (README 참고)
 $VARIANT = @{ mengdol = 0; mengsoon = 2 }
 
-$DIRS  = @('down', 'up', 'side')
+$DIRS  = @('down', 'up')
 $STEPS = @(@{ n = 'idle'; v = 0 }, @{ n = 'walk1'; v = 1 }, @{ n = 'walk2'; v = -1 })
 $FACES = @('happy', 'surprise', 'sad', 'angry', 'sleepy', 'shy')
 
@@ -49,7 +49,12 @@ $NUDE = @(
     @{ n = 'punch2';   pose = 'punch2'; face = 'normal' }   # 투 (오른손)
     @{ n = 'surprise'; pose = 'stand';  face = 'surprise' }
     @{ n = 'shy';      pose = 'stand';  face = 'shy' }      # 얼굴이 붉어짐
-    @{ n = 'laugh';    pose = 'laugh';  face = 'happy' }    # 배꼽 잡고 웃음
+    @{ n = 'laugh';    pose = 'laugh';  face = 'laugh' }    # 배꼽 잡고 눈물나게 웃음
+    # 리듬 파트용: 맹돌이는 처음부터 끝까지 눈물 흘리며 웃고 있습니다
+    @{ n = 'lol';        pose = 'stand';  face = 'laugh' }
+    @{ n = 'lol_punch1'; pose = 'punch1'; face = 'laugh' }   # 원
+    @{ n = 'lol_punch2'; pose = 'punch2'; face = 'laugh' }   # 투
+    @{ n = 'lol_fart';   pose = 'fart';   face = 'laugh' }   # 뿡
 )
 
 # ---------- palette ----------

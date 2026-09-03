@@ -41,7 +41,7 @@ const MARK_STORY: Texture2D = preload("res://assets/sprites/ui/prompt_story.png"
 ## PNG 아래쪽에 들어 있는 "그림자용 여백"의 높이.
 ## tools/build_room.ps1 의 $SHADOW_PAD 과 같은 값이어야 합니다.
 ## 이 값 덕분에 그림자를 그려 넣어도 물건이 바닥에 닿는 지점은 그대로입니다.
-@export var sprite_bottom_pad: int = 6
+@export var sprite_bottom_pad: int = 12
 
 @export_group("느낌표")
 @export var marker_kind: MarkerKind = MarkerKind.LOOK

@@ -4,7 +4,7 @@ extends CharacterBody2D
 ## [b]노드 구조[/b]
 ##   Mengdol (CharacterBody2D)   <- 이 스크립트. "움직이고 벽에 걸리는 몸"
 ##     ├─ Shadow                 <- 발밑 그림자
-##     ├─ Body (AnimatedSprite2D)<- 64x64 그림. 앞/뒤/옆 × 서기/걷기
+##     ├─ Body (AnimatedSprite2D)<- 64x64 그림. 앞/뒤 × 서기/걷기
 ##     ├─ CollisionShape2D       <- 실제 충돌 판정 (몸 전체가 아니라 발밑만!)
 ##     ├─ Interactor (Area2D)    <- 주변의 "조사할 수 있는 물건"을 감지
 ##     ├─ Step (AudioStreamPlayer)
@@ -27,17 +27,17 @@ extends CharacterBody2D
 ## 조사 버튼을 눌러 무언가를 실제로 조사했을 때.
 signal interacted(prop: Node)
 
-@export var speed: float = 92.0
-@export var acceleration: float = 900.0
-@export var friction: float = 1300.0
+@export var speed: float = 184.0
+@export var acceleration: float = 1800.0
+@export var friction: float = 2600.0
 
 ## 찍은 자리에 이만큼 가까워지면 "도착"으로 칩니다.
-const ARRIVE_DIST := 6.0
+const ARRIVE_DIST := 12.0
 ## 벽에 막혀 제자리걸음만 하면 이만큼 뒤에 목적지를 포기합니다.
 const STUCK_TIME := 0.4
 
 @onready var body: AnimatedSprite2D = $Body
-@onready var shadow: Sprite2D = $Shadow
+@onready var shadow: Node2D = $Shadow
 @onready var interactor: Area2D = $Interactor
 @onready var step_sfx: AudioStreamPlayer = $Step
 @onready var tap_mark: Sprite2D = $TapMark
@@ -64,7 +64,7 @@ var _has_target := false
 var _target_pos := Vector2.ZERO
 var _target_prop: Node = null
 var _stuck_time := 0.0
-# 바라보는 방향: "down" 앞 / "up" 뒤 / "side" 옆
+# 바라보는 방향: "down" 앞 / "up" 뒤 (옆모습은 없습니다)
 var _facing := "down"
 var _step_flip := false
 # 표정을 짓고 있는 동안에는 걷기/서기 그림으로 안 돌아갑니다
@@ -113,7 +113,7 @@ func _steer_to_target(delta: float) -> Vector2:
 		return Vector2.ZERO
 
 	# 벽 뒤를 찍었을 때 영원히 벽을 비비지 않도록
-	if velocity.length() < 12.0:
+	if velocity.length() < 24.0:
 		_stuck_time += delta
 		if _stuck_time > STUCK_TIME:
 			_arrive()
@@ -178,7 +178,7 @@ func _prop_at(world: Vector2) -> Node:
 func _arrive() -> void:
 	var prop := _target_prop
 	_clear_target()
-	if is_instance_valid(prop) and global_position.distance_to(prop.stand_point()) < 56.0:
+	if is_instance_valid(prop) and global_position.distance_to(prop.stand_point()) < 112.0:
 		prop.interact()
 		interacted.emit(prop)
 
@@ -257,13 +257,18 @@ func show_face(face: String) -> void:
 	lock_anim("" if face.is_empty() else "face_" + face)
 
 
-## 속도를 보고 앞/뒤/옆 중 어느 그림을 쓸지 정합니다.
+## 속도를 보고 앞/뒤 중 어느 그림을 쓸지 정합니다.
+##
+## 옆모습은 없앴습니다. 앞얼굴에서 옆얼굴로 도는 게 이 디자인에서는 아무리
+## 그려도 어색했고, 좌우로 걸을 때 앞모습을 그대로 쓰는 건 2D 게임에서 흔한
+## 방식이라 오히려 자연스럽습니다. 대신 걸어가는 쪽으로 그림을 살짝 뒤집어서
+## 방향은 알 수 있게 합니다.
 func _animate() -> void:
 	if not _face.is_empty():
 		return
-	if velocity.length() > 8.0:
+	if velocity.length() > 16.0:
 		if absf(velocity.x) > absf(velocity.y):
-			_facing = "side"
+			_facing = "down"
 			body.flip_h = velocity.x < 0.0
 		else:
 			_facing = "down" if velocity.y > 0.0 else "up"
@@ -271,8 +276,6 @@ func _animate() -> void:
 		_play_anim("walk")
 	else:
 		_play_anim("idle")
-
-
 func _play_anim(kind: String) -> void:
 	var wanted := "%s_%s" % [kind, _facing]
 	if body.animation != wanted or not body.is_playing():

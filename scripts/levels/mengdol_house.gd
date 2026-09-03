@@ -26,12 +26,20 @@ extends Node2D
 ##   침대에서 내려오면 맹돌이가 더 아래로 가므로 자동으로 앞에 서게 됩니다.
 
 ## 방의 크기(픽셀). 카메라가 이 밖의 빈 공간을 비추지 않게 막습니다.
-@export var room_size: Vector2i = Vector2i(640, 330)
+@export var room_size: Vector2i = Vector2i(1280, 660)
 
 ## 오프닝에서 맹돌이가 누워 있는 자리 (베개 위에 머리가 오도록 맞춰 둔 값)
-const BED_POS := Vector2(88, 265)
+## 누운 그림은 90도 돌린 것이라 "발이 텍스처 아래"라는 규칙이 안 통합니다.
+## 머리(프레임 기준 62, 96)가 베개 가운데에 오도록 직접 맞춘 값입니다.
+const BED_POS := Vector2(219, 530)
 ## 침대에서 내려와 서는 자리
-const WAKE_POS := Vector2(215, 292)
+const WAKE_POS := Vector2(560, 620)
+
+## 노란 느낌표 물건 하나 = 미니게임 하나. 물건의 노드 이름으로 찾습니다.
+## 액자가 5개니까 여기도 결국 5줄이 됩니다.
+const MINIGAMES := {
+	"Gloves": "res://scenes/minigames/one_two_bboong.tscn",
+}
 
 ## #1 눈을 떴을 때
 const LINES_WAKE := [
@@ -49,6 +57,11 @@ const LINES_OUT_OF_BED := [
 @onready var quilt: Sprite2D = $Props/Quilt
 @onready var hint: Label = $UI/Hint
 @onready var fade: ColorRect = $Fx/Fade
+@onready var tap_to_start: Label = $Fx/TapToStart
+
+## 첫 입력을 기다리는 중인가 (브라우저 오디오를 깨우기 위한 탭)
+var _tap_waiting := false
+signal first_tap
 
 var _hint_tween: Tween
 
@@ -56,6 +69,7 @@ var _hint_tween: Tween
 func _ready() -> void:
 	_setup_camera()
 	hint.modulate.a = 0.0
+	tap_to_start.visible = false
 	player.interacted.connect(_on_player_interacted)
 
 	# 노란 느낌표가 붙은 물건들을 한 군데에서 받아 둡니다.
@@ -68,10 +82,42 @@ func _ready() -> void:
 		# 이미 오프닝을 본 적이 있으면 (나중에 이 방으로 되돌아왔을 때)
 		# 바로 조작할 수 있게 합니다.
 		player.position = WAKE_POS
-		fade.color.a = 0.0
+		# 미니게임에서 암전된 채로 돌아오므로 여기서 다시 밝힙니다.
+		fade.color.a = 1.0
 		_begin_play()
+		_fade_to(0.0, 0.7)
 	else:
 		_play_intro()
+
+
+## ★ 브라우저는 사용자가 화면을 한 번 건드리기 전까지 소리를 내지 않습니다.
+##
+## 아이폰 사파리를 포함한 모든 최신 브라우저의 자동 재생 정책입니다.
+## 오프닝은 켜자마자 글자 소리가 나기 때문에, 그냥 두면 웹에서 첫 두어 줄이
+## [b]무음[/b]으로 지나가 버립니다. 그래서 시작 전에 탭(또는 아무 키)을 한 번
+## 받습니다. 이 한 번의 입력이 오디오를 깨웁니다.
+##
+## 방으로 되돌아올 때는 이미 소리가 깨어 있으므로 건너뜁니다.
+func _wait_for_first_tap() -> void:
+	tap_to_start.visible = true
+	tap_to_start.modulate.a = 0.0
+	var blink := create_tween().set_loops()
+	blink.tween_property(tap_to_start, "modulate:a", 1.0, 0.65).set_trans(Tween.TRANS_SINE)
+	blink.tween_property(tap_to_start, "modulate:a", 0.2, 0.65).set_trans(Tween.TRANS_SINE)
+	_tap_waiting = true
+	await first_tap
+	blink.kill()
+	tap_to_start.visible = false
+
+
+func _input(event: InputEvent) -> void:
+	if not _tap_waiting:
+		return
+	if (event is InputEventKey and event.pressed and not event.is_echo()) \
+			or (event is InputEventMouseButton and event.pressed):
+		_tap_waiting = false
+		get_viewport().set_input_as_handled()
+		first_tap.emit()
 
 
 ## 카메라가 방 밖의 빈 공간을 비추지 않도록 경계를 정해 줍니다.
@@ -90,6 +136,10 @@ func _play_intro() -> void:
 	var camera: Camera2D = player.get_node("Camera2D")
 	player.control_enabled = false
 	player.position = BED_POS
+	# 침대에 누운 그림으로 고정합니다. 서 있는 그림을 침대에 올려두면
+	# 이불 위에 사람이 서 있는 것처럼 보입니다.
+	player.lock_anim("lie")
+	player.shadow.visible = false
 	# 잠에서 깰 때는 카메라가 침대 쪽으로 바짝 붙어 있다가 서서히 물러납니다.
 	camera.zoom = Vector2(1.35, 1.35)
 	# 위치를 순간이동시키는 동안에는 부드러운 따라오기를 꺼 둡니다.
@@ -97,7 +147,8 @@ func _play_intro() -> void:
 	camera.reset_smoothing()
 	fade.color.a = 1.0
 
-	await get_tree().create_timer(0.7).timeout
+	await _wait_for_first_tap()
+	await get_tree().create_timer(0.5).timeout
 
 	# --- #1 눈을 뜬다: 졸린 눈을 두 번 껌뻑이고 나서 완전히 뜬다
 	await _fade_to(0.55, 0.50)
@@ -135,6 +186,10 @@ func _get_out_of_bed() -> void:
 	var sprite: AnimatedSprite2D = player.body
 	var camera: Camera2D = player.get_node("Camera2D")
 	var base_offset: float = sprite.offset.y
+
+	# 몸을 일으킵니다. 여기서부터 다시 서 있는 그림입니다.
+	player.lock_anim("")
+	player.shadow.visible = true
 
 	# 내려서는 반동 (위로 살짝 떴다가 착지)
 	var hop := create_tween()
@@ -175,14 +230,24 @@ func _show_hint() -> void:
 
 ## ★ 노란 느낌표 물건을 조사했을 때 여기로 들어옵니다.
 ##
-## 지금은 대사만 나오고 끝납니다. 미니게임이 만들어지면 여기서
-##   get_tree().change_scene_to_file("res://scenes/minigames/xxx.tscn")
-## 처럼 미니게임 씬으로 넘기고, 클리어하면 사진 2장을 해금한 뒤
-## 이 방으로 돌아오게 하면 됩니다.
+## 물건 이름이 MINIGAMES 에 있으면 대사가 끝난 뒤 암전하고 그 미니게임 씬으로
+## 넘어갑니다. 미니게임이 끝나면 다시 이 방으로 돌아옵니다.
 ## (GameState.get_flag("intro_done") 덕분에 돌아와도 오프닝은 다시 안 나옵니다)
 func _on_story_triggered(prop: Node) -> void:
 	await Dialogue.finished
 	GameState.set_flag("story_" + prop.name, true)
+
+	# prop.name 은 StringName 이라 String 으로 바꿔서 찾습니다.
+	var scene: String = MINIGAMES.get(String(prop.name), "")
+	if scene.is_empty():
+		return
+
+	# 미니게임으로 넘어갈 때는 반드시 암전을 한 번 거칩니다.
+	# (미니게임 쪽도 까만 화면에서 시작하니까 이어서 붙습니다)
+	player.control_enabled = false
+	await get_tree().create_timer(0.25).timeout
+	await _fade_to(1.0, 0.7)
+	get_tree().change_scene_to_file(scene)
 
 
 ## 뭔가를 한 번이라도 조사했다면 안내는 할 일을 다 한 것이므로 먼저 지웁니다.

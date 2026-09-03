@@ -17,9 +17,38 @@ extends Node2D
 ##   기준 화면(480x270) 가운데에 욕실이 오게 하고, 남는 좌우는 화면이 더 넓은
 ##   기기에서 벽 타일이 계속 이어져 보이도록 쓰입니다.
 
+# ============================================================
+#  ★ 대사는 전부 여기 있습니다. 고칠 땐 여기만 보면 됩니다.
+# ------------------------------------------------------------
+#  대괄호 [ ] 안의 문자열 하나 = 대사창 한 번입니다.
+#  한 배열에 여러 줄을 넣으면 같은 사람이 이어서 말합니다.
+#      const L_어쩌고 := ["첫 번째 창", "두 번째 창"]
+#  쉼표와 따옴표만 안 빠뜨리면 됩니다.
+# ============================================================
+
+## 대사창 왼쪽 위에 뜨는 이름표
+const NAME_D := "맹돌이"
+const NAME_S := "맹순이"
+
+const L_D_ASK := ["...어때, 이제 복싱에 대해 조금 알겠어?"]
+const L_S_ASK := ["조금 어려워. 직접 보여줄 수 있어?"]
+const L_D_SURE := ["당연하지. 잘 보고 따라해봐."]
+const L_D_YOUR_TURN := ["따라해봐."]
+const L_D_LAUGH := ["푸하하하하!", "야, 그거 원 투 뿡이잖아!"]
+const L_S_DONT_LOOK := ["...슬리퍼 끄는 소리야!"]
+
+## 주먹을 지를 때 화면 가운데에 크게 뜨는 글자 (대사창이 아닙니다)
+const SHOUT_ONE := "원!"
+const SHOUT_TWO := "투!"
+const SHOUT_BBOONG := "뿡!"
+const SHOUT_WHAT := "뿡?!"
+
 # 두 사람이 서는 자리
 const MENGDOL_POS := Vector2(300, 214)
 const MENGSOON_POS := Vector2(196, 214)
+
+## 방귀가 나오는 자리 (맹순이 기준). 구름 그림의 꼬리 끝이 여기 붙습니다.
+const BBOONG_FROM := Vector2(-16, -6)
 
 @onready var mengdol: Sprite2D = $Cast/Mengdol
 @onready var mengsoon: Sprite2D = $Cast/Mengsoon
@@ -73,36 +102,36 @@ func _play_intro() -> void:
 	await _fade_to(0.0, 0.9)
 	await get_tree().create_timer(0.4).timeout
 
-	Dialogue.say(["...어때, 이제 복싱에 대해 조금 알겠어?"], "맹돌이")
+	Dialogue.say(L_D_ASK, NAME_D)
 	await Dialogue.finished
-	Dialogue.say(["조금 어려워. 직접 보여줄 수 있어?"], "맹순이")
+	Dialogue.say(L_S_ASK, NAME_S)
 	await Dialogue.finished
-	Dialogue.say(["당연하지. 잘 보고 따라해봐."], "맹돌이")
+	Dialogue.say(L_D_SURE, NAME_D)
 	await Dialogue.finished
 
 	# --- 맹돌이의 시범
 	mengdol.texture = POSE["d_guard"]
 	await get_tree().create_timer(0.6).timeout
-	await _jab(mengdol, "d_punch1", "원!", SFX_TICK)
-	await _jab(mengdol, "d_punch2", "투!", SFX_TOCK)
+	await _jab(mengdol, "d_punch1", SHOUT_ONE, SFX_TICK)
+	await _jab(mengdol, "d_punch2", SHOUT_TWO, SFX_TOCK)
 	mengdol.texture = POSE["d_stand"]
 	await get_tree().create_timer(0.3).timeout
 
-	Dialogue.say(["따라해봐."], "맹돌이")
+	Dialogue.say(L_D_YOUR_TURN, NAME_D)
 	await Dialogue.finished
 
 	# --- 맹순이가 따라한다
 	mengsoon.texture = POSE["s_guard"]
 	await get_tree().create_timer(0.7).timeout
-	await _jab(mengsoon, "s_punch1", "원!", SFX_TICK)
-	await _jab(mengsoon, "s_punch2", "투!", SFX_TOCK)
+	await _jab(mengsoon, "s_punch1", SHOUT_ONE, SFX_TICK)
+	await _jab(mengsoon, "s_punch2", SHOUT_TWO, SFX_TOCK)
 
 	# --- 그리고 뿡
 	await _bboong()
 
 	# --- 맹순이는 새빨개지고, 맹돌이는 주저앉아 웃는다
 	mengsoon.texture = POSE["s_surprise"]
-	_shout("뿡?!", Color(1, 1, 1))
+	_shout(SHOUT_WHAT, Color(1, 1, 1))
 	await get_tree().create_timer(0.7).timeout
 	mengsoon.texture = POSE["s_shy"]
 	await get_tree().create_timer(0.5).timeout
@@ -114,9 +143,9 @@ func _play_intro() -> void:
 	_shake(mengdol, 1.4)
 	await get_tree().create_timer(1.6).timeout
 
-	Dialogue.say(["푸하하하하!", "야, 그거 원 투 뿡이잖아!"], "맹돌이")
+	Dialogue.say(L_D_LAUGH, NAME_D)
 	await Dialogue.finished
-	Dialogue.say(["...보지 마."], "맹순이")
+	Dialogue.say(L_S_DONT_LOOK, NAME_S)
 	await Dialogue.finished
 
 	await _fade_to(1.0, 0.9)
@@ -137,18 +166,22 @@ func _jab(who: Sprite2D, pose_key: String, text: String, sound: AudioStream) -> 
 	await get_tree().create_timer(0.55).timeout
 
 
-## 방귀. 보라색 구름이 뒤에서 세 단계로 퍼진다.
+## 방귀. 보라색 구름이 뒤에서 세 단계로 퍼집니다.
+##
+## ★ 구름 그림은 꼬리 끝이 항상 오른쪽 아래에서 (6, 6) 픽셀에 있습니다.
+##   offset 을 (6 - w/2, 6 - h/2) 로 잡으면 노드 위치 = 꼬리 끝이 되어,
+##   구름이 커져도 똥꼬에서 안 떨어집니다.
 func _bboong() -> void:
 	sfx.stream = SFX_BBOONG
 	sfx.play()
-	_shout("뿡!", Color(0.85, 0.7, 1.0))
-	# 맹순이 뒤쪽(화면 왼쪽 아래)에서 피어오릅니다
-	fart.position = mengsoon.position + Vector2(-26, -14)
+	_shout(SHOUT_BBOONG, Color(0.85, 0.7, 1.0))
+	fart.position = mengsoon.position + BBOONG_FROM
 	fart.visible = true
 	fart.modulate.a = 1.0
 	for i in FART_PUFF.size():
 		fart.texture = FART_PUFF[i]
-		fart.position += Vector2(-5, -4)
+		var s: Vector2 = FART_PUFF[i].get_size()
+		fart.offset = Vector2(6.0 - s.x * 0.5, 6.0 - s.y * 0.5)
 		await get_tree().create_timer(0.16).timeout
 	var out := create_tween()
 	out.tween_property(fart, "modulate:a", 0.0, 0.7)
@@ -195,17 +228,7 @@ func _fade_to(target: float, duration: float) -> void:
 
 # ------------------------------------------------------------ 다음 단계
 
-## ★ 여기에 리듬 게임이 들어갑니다.
-##
-## 지금은 아직 없어서 방으로 돌려보냅니다. GameState 에 클리어 표시를 하지
-## 않으므로, 방에 돌아가도 복싱글러브는 여전히 노란 느낌표인 채로 남습니다.
-##
-## 리듬 게임을 만들 때 할 일:
-##   1. 이 함수에서 리듬 파트를 시작 (같은 씬 안에서 UI만 바꿔 끼우면 됩니다)
-##   2. 클리어하면
-##        GameState.unlock_photo("clover")
-##        GameState.unlock_photo("king_mengsoon")
-##        GameState.set_flag("minigame1_done", true)
-##   3. 그리고 방으로 복귀
+## 도입 컷신이 끝나면 리듬 파트로 넘어갑니다.
+## 컷신은 암전으로 끝나고 리듬 파트는 암전에서 시작하므로 그대로 이어집니다.
 func _start_rhythm_game() -> void:
-	get_tree().change_scene_to_file("res://scenes/levels/mengdol_house.tscn")
+	get_tree().change_scene_to_file("res://scenes/minigames/one_two_rhythm.tscn")

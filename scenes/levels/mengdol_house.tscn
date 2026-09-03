@@ -1,25 +1,16 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/mengdol_house.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/objects/prop.tscn" id="2_prop"]
 [ext_resource type="PackedScene" path="res://scenes/characters/mengdol.tscn" id="3_mengdol"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/room_bg.png" id="4_bg"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/rug.png" id="5_rug"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/frame_empty.png" id="6_frame"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/window.png" id="7_window"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/bed_base.png" id="8_bed"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/bed_quilt.png" id="9_quilt"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/wardrobe.png" id="10_wardrobe"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/door.png" id="11_door"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/desk.png" id="12_desk"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/chair.png" id="13_chair"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/glove.png" id="14_glove"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/room_iso.png" id="4_room"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/quilt_overlay.png" id="5_quilt"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h"]
-size = Vector2(640, 20)
+size = Vector2(1280, 40)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_v"]
-size = Vector2(24, 380)
+size = Vector2(48, 760)
 
 [node name="MengdolHouse" type="Node2D"]
 script = ExtResource("1_script")
@@ -27,138 +18,91 @@ script = ExtResource("1_script")
 [node name="Floor" type="Node2D" parent="."]
 
 [node name="Background" type="Sprite2D" parent="Floor"]
-texture = ExtResource("4_bg")
+texture = ExtResource("4_room")
 centered = false
-
-[node name="Rug" type="Sprite2D" parent="Floor"]
-position = Vector2(180, 196)
-texture = ExtResource("5_rug")
-centered = false
-
-[node name="Frame1" type="Sprite2D" parent="Floor"]
-position = Vector2(32, 70)
-texture = ExtResource("6_frame")
-centered = false
-
-[node name="Frame2" type="Sprite2D" parent="Floor"]
-position = Vector2(78, 88)
-texture = ExtResource("6_frame")
-centered = false
-
-[node name="Frame3" type="Sprite2D" parent="Floor"]
-position = Vector2(124, 70)
-texture = ExtResource("6_frame")
-centered = false
-
-[node name="Frame4" type="Sprite2D" parent="Floor"]
-position = Vector2(486, 64)
-texture = ExtResource("6_frame")
-centered = false
-
-[node name="Frame5" type="Sprite2D" parent="Floor"]
-position = Vector2(540, 64)
-texture = ExtResource("6_frame")
-centered = false
-
-[node name="Window" parent="Floor" instance=ExtResource("2_prop")]
-position = Vector2(320, 136)
-texture = ExtResource("7_window")
-zone_size = Vector2(112, 56)
-zone_offset = Vector2(0, 60)
-lines = Array[String](["(밖은 아직 어스름하다.)", "(해가 막 뜨려는 참인 것 같다.)"])
-marker_offset = Vector2(0, -52)
-
-[node name="Door" parent="Floor" instance=ExtResource("2_prop")]
-position = Vector2(434, 152)
-texture = ExtResource("11_door")
-zone_size = Vector2(92, 56)
-zone_offset = Vector2(0, 34)
-lines = Array[String](["(밖으로 나가는 문이다.)", "(...나가기 전에, 이 방부터 좀 더 둘러보자.)"])
-marker_offset = Vector2(0, -70)
-
-[node name="Bed" parent="Floor" instance=ExtResource("2_prop")]
-position = Vector2(110, 268)
-texture = ExtResource("8_bed")
-solid_size = Vector2(132, 62)
-solid_offset = Vector2(0, -31)
-zone_size = Vector2(152, 72)
-zone_offset = Vector2(0, -18)
-lines = Array[String](["(아직 온기가 남아 있다. 방금 전까지 여기 누워 있었으니까.)", "(...그런데 언제부터 누워 있었는지가 기억나지 않는다.)"])
-marker_offset = Vector2(0, -76)
 
 [node name="Props" type="Node2D" parent="."]
 y_sort_enabled = true
 
+[node name="Player" parent="Props" instance=ExtResource("3_mengdol")]
+position = Vector2(601, 616)
+
 [node name="Quilt" type="Sprite2D" parent="Props"]
-position = Vector2(137, 268)
-texture = ExtResource("9_quilt")
+position = Vector2(0, 600)
+texture = ExtResource("5_quilt")
 centered = false
-offset = Vector2(-41, -52)
+offset = Vector2(0, -600)
 
-[node name="Wardrobe" parent="Props" instance=ExtResource("2_prop")]
-position = Vector2(216, 170)
-texture = ExtResource("10_wardrobe")
-solid_size = Vector2(64, 22)
-solid_offset = Vector2(0, -11)
-zone_size = Vector2(86, 56)
-zone_offset = Vector2(0, 22)
+[node name="Zones" type="Node2D" parent="."]
+
+[node name="Bed" parent="Zones" instance=ExtResource("2_prop")]
+position = Vector2(238, 600)
+zone_size = Vector2(300, 130)
+zone_offset = Vector2(0, -30)
+lines = Array[String](["(아직 온기가 남아 있다. 방금 전까지 여기 누워 있었으니까.)", "(...그런데 언제부터 누워 있었는지가 기억나지 않는다.)"])
+marker_offset = Vector2(0, -160)
+
+[node name="Window" parent="Zones" instance=ExtResource("2_prop")]
+position = Vector2(660, 600)
+zone_size = Vector2(260, 130)
+zone_offset = Vector2(0, -30)
+lines = Array[String](["(밖은 아직 어스름하다.)", "(해가 막 뜨려는 참인 것 같다.)"])
+marker_offset = Vector2(19, -398)
+
+[node name="Wardrobe" parent="Zones" instance=ExtResource("2_prop")]
+position = Vector2(468, 600)
+zone_size = Vector2(170, 130)
+zone_offset = Vector2(0, -30)
 lines = Array[String](["(옷장 안에는 내 옷이 걸려 있다. 크기도 딱 맞는다.)", "(...그런데 왜 하나도 낯이 익지 않을까.)"])
-marker_offset = Vector2(0, -98)
+marker_offset = Vector2(9, -300)
 
-[node name="Desk" parent="Props" instance=ExtResource("2_prop")]
-position = Vector2(550, 200)
-texture = ExtResource("12_desk")
-solid_size = Vector2(120, 30)
-solid_offset = Vector2(0, -15)
-zone_size = Vector2(140, 60)
-zone_offset = Vector2(0, 30)
+[node name="Desk" parent="Zones" instance=ExtResource("2_prop")]
+position = Vector2(934, 600)
+zone_size = Vector2(250, 130)
+zone_offset = Vector2(0, -30)
 lines = Array[String](["(초가 끝까지 타서 굳어 있다.)", "(밤새 뭔가를 하다가 그대로 잠들어 버린 걸까.)", "(...서랍 안에 뭔가 들어 있다.)"])
+marker_offset = Vector2(12, -230)
 
-marker_offset = Vector2(0, -84)
+[node name="Door" parent="Zones" instance=ExtResource("2_prop")]
+position = Vector2(1160, 600)
+zone_size = Vector2(200, 130)
+zone_offset = Vector2(0, -30)
+lines = Array[String](["(밖으로 나가는 문이다.)", "(...나가기 전에, 이 방부터 좀 더 둘러보자.)"])
+marker_offset = Vector2(0, -330)
 
-[node name="Chair" parent="Props" instance=ExtResource("2_prop")]
-position = Vector2(548, 238)
-texture = ExtResource("13_chair")
-solid_size = Vector2(30, 14)
-solid_offset = Vector2(0, -7)
-
-[node name="Gloves" parent="Props" instance=ExtResource("2_prop")]
-position = Vector2(330, 300)
-texture = ExtResource("14_glove")
-zone_size = Vector2(78, 56)
-zone_offset = Vector2(0, -8)
+[node name="Gloves" parent="Zones" instance=ExtResource("2_prop")]
+position = Vector2(237, 626)
+zone_size = Vector2(220, 150)
+zone_offset = Vector2(0, -40)
 lines = Array[String](["(복싱 글러브다. 한참 쓴 것처럼 낡았다.)", "(...누구한테 복싱을 가르쳐 준 적이 있었나?)"])
 marker_kind = 1
-marker_offset = Vector2(0, -46)
-
-[node name="Player" parent="Props" instance=ExtResource("3_mengdol")]
-position = Vector2(88, 265)
+marker_offset = Vector2(53, -440)
 
 [node name="Walls" type="Node2D" parent="."]
 
 [node name="WallTop" type="StaticBody2D" parent="Walls"]
-position = Vector2(320, 158)
+position = Vector2(640, 480)
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop"]
 shape = SubResource("RectangleShape2D_h")
 
 [node name="WallBottom" type="StaticBody2D" parent="Walls"]
-position = Vector2(320, 328)
+position = Vector2(640, 686)
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom"]
 shape = SubResource("RectangleShape2D_h")
 
 [node name="WallLeft" type="StaticBody2D" parent="Walls"]
-position = Vector2(30, 240)
+position = Vector2(56, 580)
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallLeft"]
 shape = SubResource("RectangleShape2D_v")
 
 [node name="WallRight" type="StaticBody2D" parent="Walls"]
-position = Vector2(610, 240)
+position = Vector2(1246, 580)
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallRight"]
@@ -168,15 +112,15 @@ shape = SubResource("RectangleShape2D_v")
 layer = 5
 
 [node name="Hint" type="Label" parent="UI"]
-offset_left = 14.0
-offset_top = 10.0
-offset_right = 466.0
-offset_bottom = 26.0
+offset_left = 28.0
+offset_top = 20.0
+offset_right = 932.0
+offset_bottom = 52.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.98, 0.949, 0.867, 0.88)
 theme_override_colors/font_outline_color = Color(0.078, 0.055, 0.043, 0.85)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 11
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 22
 text = "WASD 또는 화면 찍기로 이동   ·   Space 나 물건 찍기로 조사"
 
 [node name="Fx" type="CanvasLayer" parent="."]
@@ -187,3 +131,22 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 color = Color(0.043, 0.031, 0.027, 1)
+
+[node name="TapToStart" type="Label" parent="Fx"]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -440.0
+offset_top = -32.0
+offset_right = 440.0
+offset_bottom = 32.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.98, 0.9, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.09, 0.16, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 22
+text = "화면을 탭하거나 아무 키나 누르세요"
+horizontal_alignment = 1
+vertical_alignment = 1
