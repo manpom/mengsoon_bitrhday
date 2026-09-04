@@ -88,10 +88,15 @@ happy/surprise/sad/angry/sleepy/shy/laugh). 전부 **ChatGPT(유료 GPT 이미�
 - **틸트시프트** — 지금은 미리보기에만 겁니다. 화면 셰이더로 넣으면 게임에서도
   "작은 모형" 느낌이 납니다
 - **방 BGM** — 지금은 미니게임 1 에만 음악이 있습니다
-- **남은 절차적 프레임** — 표정 14장 + 이동 12장(앞/뒤 idle·walk1·walk2)이 AI 로
-  바뀌었습니다. 아직 절차적인 것: **누운 그림(`_lie`) 2장, 나체 세트(`_nude_*`)
-  22장.** 나체 세트는 미니게임 1 컷신·리듬 전용이라 표정/이동과 안 섞입니다.
-  파이프라인은 이동 프레임과 동일 (마젠타 생성 → `clean_ai_refs.ps1` → 배치).
+- **남은 절차적 프레임: 누운 그림(`_lie`) 2장뿐.** 표정 14장 + 이동 12장 +
+  나체 세트가 전부 AI 로 바뀌었습니다. `_lie` 는 "앞얼굴을 90도 돌린 것"이라
+  프레임 규칙이 아예 다르고(0-4 ③ 참고) 안 급해서 남겨뒀습니다.
+- **나체 세트: 실제로 쓰는 프레임만 AI 로 교체.** `scripts/` 가 참조하는 건
+  맹돌이 9장(stand·guard·punch1·punch2·laugh·lol·lol_punch1·lol_punch2·
+  lol_fart), 맹순이 6장(stand·guard·punch1·punch2·surprise·shy)뿐이라
+  그것만 교체했습니다. 나머지(맹순이 laugh·lol·lol_punch1·lol_punch2·
+  lol_fart 5장)는 코드에서 안 쓰여서 옛날 절차적 그림 그대로입니다 —
+  나중에 맹순이도 리듬 파트에 나오게 되면 그때 마저 만들면 됩니다.
 ## 0-3. 그림 다시 굽는 법
 
 전부 PowerShell + System.Drawing 으로 그립니다. **외부 에셋이 하나도 없습니다.**
@@ -134,10 +139,11 @@ powershell -ExecutionPolicy Bypass -File tools\build_bgm.ps1         # 음악 + 
 > 이 중 `build_room.ps1` 과 `build_stage1.ps1` 은 예전 UI·무대 그림까지 같이
 > 굽습니다. **실수로 돌리면 새로 만든 PNG 를 도트로 덮어씁니다.** 조심하세요.
 
-### AI 그림 얹는 법 (표정 + 이동)
+### AI 그림 얹는 법 (표정 + 이동 + 나체)
 
-표정(`*_face_*.png`) 14장과 이동(`*_{down,up}_{idle,walk1,walk2}.png`) 12장이
-전부 ChatGPT(유료 GPT 이미지) 로 교체됐습니다. 아직 절차적: `_lie`, `_nude_*`.
+표정(`*_face_*.png`) 14장, 이동(`*_{down,up}_{idle,walk1,walk2}.png`) 12장,
+나체 세트(`*_nude_*.png`, 실제로 쓰는 15장 — 맹돌이 9 + 맹순이 6) 가
+전부 ChatGPT(유료 GPT 이미지) 로 교체됐습니다. 아직 절차적: `_lie` 뿐.
 
 **소스: 전부 ChatGPT(유료 GPT 이미지).** 예전엔 Gemini(nano-banana) 로
 뽑았는데, "배경 지워줘" 결과가 **알파가 아니라 체커보드가 픽셀에 구워진 불투명
@@ -154,6 +160,21 @@ PNG**로 받아지고, 프레임마다 확대율·다리 잘림이 제각각이�
 - `integrate_ai_moves.ps1` 은 방향별로 **idle 의 캐릭터 키로 scale 을 한 번 정하고
   walk 에도 같은 scale** 을 씁니다 (프레임마다 크기가 맥동하면 안 됨). idle·walk
   모두 알파 bbox 바닥(딛는 발)을 `FOOT_Y` 에 맞춥니다.
+- **뒷모습 걷기(`up_walk`) 함정**: "무릎 들고 발을 공중에" 처럼 크게 움직이라고
+  하면 AI 가 다리만 카메라 쪽으로 돌려버려서 머리·몸통은 뒷모습인데 다리만
+  앞모습인 이상한 그림이 됩니다. **"뒤꿈치는 항상 카메라 쪽, 발은 살짝만
+  앞뒤로 벌리기"** 처럼 작은 움직임으로 요청해야 몸 전체가 뒤를 향한 채 유지됩니다.
+
+**나체 세트 특이점:**
+- "nude" 라는 말 대신 "목욕 버전 — 후드/드레스 없이 크림색 배와 물갈퀴 발의
+  단순한 마스코트 몸, 사람이 아닌 캐릭터" 식으로 설명하면 순하게 통과합니다.
+- `scripts/` 가 실제로 참조하는 파일명만 골라 만들면 됩니다 —
+  `grep -rn "nude_" scripts/ scenes/` 로 어떤 포즈가 실제 쓰이는지 먼저 확인하세요.
+  (맹돌이 stand·guard·punch1·punch2·laugh·lol·lol_punch1·lol_punch2·lol_fart,
+  맹순이 stand·guard·punch1·punch2·surprise·shy — 맹순이는 laugh·lol 계열이 없음)
+- `integrate_ai_nude.ps1` 은 캐릭터당 `nude_stand` 의 키를 scale 기준으로 삼아
+  나머지 포즈 전부에 동일 적용합니다 (리듬 파트에서 lol → lol_punch1 →
+  lol_punch2 로 프레임이 계속 바뀌므로 여기서도 맥동 방지가 중요).
 
 **ChatGPT 파이프라인 (3단계 = 스크립트 2개):**
 
@@ -172,9 +193,10 @@ PNG**로 받아지고, 프레임마다 확대율·다리 잘림이 제각각이�
 3. **키잉** — `tools/clean_ai_refs.ps1` 실행.
 
 ```bash
-powershell -ExecutionPolicy Bypass -File tools\clean_ai_refs.ps1      # 마젠타 -> 투명 (표정+이동)
+powershell -ExecutionPolicy Bypass -File tools\clean_ai_refs.ps1      # 마젠타 -> 투명 (표정+이동+나체)
 powershell -ExecutionPolicy Bypass -File tools\integrate_ai_faces.ps1  # 표정 -> 192x192
 powershell -ExecutionPolicy Bypass -File tools\integrate_ai_moves.ps1  # 이동 -> 192x192
+powershell -ExecutionPolicy Bypass -File tools\integrate_ai_nude.ps1   # 나체 -> 192x192
 ```
 
 `clean_ai_refs.ps1` 은 무거운 픽셀 작업을 **C#(Add-Type)** 로 돌립니다 (PowerShell

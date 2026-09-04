@@ -182,5 +182,13 @@ foreach ($who in 'mengdol', 'mengsoon') {
         $dst = Join-Path $OutRefDir ("$who\clean\$pose.png")
         Clean-One $src $dst
     }
+    # 나체 세트(욕실 컷신·리듬): clean/nude_<pose>.png  (integrate_ai_nude.ps1 이 씀)
+    foreach ($pose in 'nude_stand', 'nude_guard', 'nude_punch1', 'nude_punch2', 'nude_surprise',
+        'nude_shy', 'nude_laugh', 'nude_lol', 'nude_lol_punch1', 'nude_lol_punch2', 'nude_lol_fart') {
+        $src = Join-Path $RawDir ("${who}_${pose}.png")
+        if (-not (Test-Path $src)) { continue }
+        $dst = Join-Path $OutRefDir ("$who\clean\$pose.png")
+        Clean-One $src $dst
+    }
 }
 Write-Output 'done'
