@@ -168,10 +168,18 @@ function Clean-One([string]$srcPath, [string]$dstPath) {
 Write-Output 'GPT magenta refs -> clean transparent PNG -> clean/'
 foreach ($who in 'mengdol', 'mengsoon') {
     Write-Output $who
+    # 표정: clean/face_<expr>.png
     foreach ($expr in 'happy', 'surprise', 'sad', 'angry', 'sleepy', 'shy', 'laugh') {
         $src = Join-Path $RawDir ("${who}_${expr}.png")
         if (-not (Test-Path $src)) { Write-Output "  (missing: ${who}_${expr}.png)"; continue }
         $dst = Join-Path $OutRefDir ("$who\clean\face_$expr.png")
+        Clean-One $src $dst
+    }
+    # 이동(앞/뒤 서기·걷기): clean/<pose>.png  (integrate_ai_moves.ps1 이 씀)
+    foreach ($pose in 'down_idle', 'down_walk', 'up_idle', 'up_walk') {
+        $src = Join-Path $RawDir ("${who}_${pose}.png")
+        if (-not (Test-Path $src)) { Write-Output "  (missing: ${who}_${pose}.png)"; continue }
+        $dst = Join-Path $OutRefDir ("$who\clean\$pose.png")
         Clean-One $src $dst
     }
 }

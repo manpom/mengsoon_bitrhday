@@ -88,9 +88,10 @@ happy/surprise/sad/angry/sleepy/shy/laugh). 전부 **ChatGPT(유료 GPT 이미�
 - **틸트시프트** — 지금은 미리보기에만 겁니다. 화면 셰이더로 넣으면 게임에서도
   "작은 모형" 느낌이 납니다
 - **방 BGM** — 지금은 미니게임 1 에만 음악이 있습니다
-- **전신·걷기 프레임은 아직 절차적** — 표정(face_*) 14장만 AI 로 바꿨습니다.
-  down/up idle·walk, 누운 그림, 나체 포즈는 그대로입니다. `tools/ai_refs/<who>/`
-  에 idle·guard AI 레퍼런스는 이미 받아 뒀습니다 (맹순이 guard 는 아직 없음)
+- **남은 절차적 프레임** — 표정 14장 + 이동 12장(앞/뒤 idle·walk1·walk2)이 AI 로
+  바뀌었습니다. 아직 절차적인 것: **누운 그림(`_lie`) 2장, 나체 세트(`_nude_*`)
+  22장.** 나체 세트는 미니게임 1 컷신·리듬 전용이라 표정/이동과 안 섞입니다.
+  파이프라인은 이동 프레임과 동일 (마젠타 생성 → `clean_ai_refs.ps1` → 배치).
 ## 0-3. 그림 다시 굽는 법
 
 전부 PowerShell + System.Drawing 으로 그립니다. **외부 에셋이 하나도 없습니다.**
@@ -133,16 +134,26 @@ powershell -ExecutionPolicy Bypass -File tools\build_bgm.ps1         # 음악 + 
 > 이 중 `build_room.ps1` 과 `build_stage1.ps1` 은 예전 UI·무대 그림까지 같이
 > 굽습니다. **실수로 돌리면 새로 만든 PNG 를 도트로 덮어씁니다.** 조심하세요.
 
-### AI 그림 얹는 법 (표정만)
+### AI 그림 얹는 법 (표정 + 이동)
 
-절차적 그림과 별개로, 표정(`*_face_*.png`) 14장(맹돌이 7 + 맹순이 7)을 전부 AI
-그림으로 바꿔치기했습니다. 전신·걷기 프레임은 아직 안 건드렸습니다 (걷기 같은
-미세한 동작 차이를 AI 가 잘 안 따라줘서, 같은 세트 안에서 절차적 그림과 섞이면
-더 어색합니다).
+표정(`*_face_*.png`) 14장과 이동(`*_{down,up}_{idle,walk1,walk2}.png`) 12장이
+전부 ChatGPT(유료 GPT 이미지) 로 교체됐습니다. 아직 절차적: `_lie`, `_nude_*`.
 
-**소스: 14장 전부 ChatGPT(유료 GPT 이미지).** 예전엔 Gemini(nano-banana) 로
+**소스: 전부 ChatGPT(유료 GPT 이미지).** 예전엔 Gemini(nano-banana) 로
 뽑았는데, "배경 지워줘" 결과가 **알파가 아니라 체커보드가 픽셀에 구워진 불투명
 PNG**로 받아지고, 프레임마다 확대율·다리 잘림이 제각각이라 GPT 로 전면 교체했습니다.
+
+**이동 프레임의 특이점 (0-3 아래 표정 파이프라인과 대부분 동일):**
+- 걷기 포즈는 3장짜리 스프라이트 시트로 한 번에 요청하면 3장이 다 똑같이
+  나옵니다. **한 포즈씩** 따로 요청해야 다리를 제대로 듭니다.
+- 방향(앞/뒤)마다 **idle + walk 딱 2장만** GPT 로 생성. `walk1` = walk 그대로,
+  `walk2` = walk 를 좌우반전 (`integrate_ai_moves.ps1` 이 미러). 게임이 이동
+  방향에 따라 또 flip 하지만 두 프레임이 미러라 L→모음→R→모음 사이클 성립.
+- `up_*` 는 "뒤에서 본 모습, 얼굴 없음, 후드/리본 뒷면" 으로 요청.
+- 첫 메시지에 앞선 캐릭터의 마젠타 컷을 레퍼런스로 같이 올려 **프레이밍 고정**.
+- `integrate_ai_moves.ps1` 은 방향별로 **idle 의 캐릭터 키로 scale 을 한 번 정하고
+  walk 에도 같은 scale** 을 씁니다 (프레임마다 크기가 맥동하면 안 됨). idle·walk
+  모두 알파 bbox 바닥(딛는 발)을 `FOOT_Y` 에 맞춥니다.
 
 **ChatGPT 파이프라인 (3단계 = 스크립트 2개):**
 
@@ -161,8 +172,9 @@ PNG**로 받아지고, 프레임마다 확대율·다리 잘림이 제각각이�
 3. **키잉** — `tools/clean_ai_refs.ps1` 실행.
 
 ```bash
-powershell -ExecutionPolicy Bypass -File tools\clean_ai_refs.ps1     # 마젠타 -> 투명
-powershell -ExecutionPolicy Bypass -File tools\integrate_ai_faces.ps1 # 192x192 배치
+powershell -ExecutionPolicy Bypass -File tools\clean_ai_refs.ps1      # 마젠타 -> 투명 (표정+이동)
+powershell -ExecutionPolicy Bypass -File tools\integrate_ai_faces.ps1  # 표정 -> 192x192
+powershell -ExecutionPolicy Bypass -File tools\integrate_ai_moves.ps1  # 이동 -> 192x192
 ```
 
 `clean_ai_refs.ps1` 은 무거운 픽셀 작업을 **C#(Add-Type)** 로 돌립니다 (PowerShell
