@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 #  AI 레퍼런스(tools/ai_refs) 얼굴 표정을 게임 프레임(192x192)에 맞춰
 #  자르고 배치해서 assets/sprites/characters/ 에 반영합니다.
 # ------------------------------------------------------------
@@ -49,7 +49,9 @@ function Get-AlphaBBox([System.Drawing.Bitmap]$bmp) {
         for ($gx = 0; $gx -lt $gw; $gx++) {
             $x = $gx * $STEP
             if ($x -ge $w) { continue }
-            if ($bytes[$row + $x * 4 + 3] -gt 80) { $grid[$gy * $gw + $gx] = $true }
+            # clean_ai_refs.ps1 이 이미 배경을 하드컷 + 최대덩어리만 남겨두므로
+            # 문턱을 낮게(>16) 잡아야 페더링된 실루엣 가장자리까지 한 덩어리로 이어집니다.
+            if ($bytes[$row + $x * 4 + 3] -gt 16) { $grid[$gy * $gw + $gx] = $true }
         }
     }
 
@@ -131,11 +133,14 @@ function Place-Frame([string]$srcPath, [string]$dstPath, [int]$CropX0 = -1, [int
     $charW = $bbox.X1 - $bbox.X0
     $cx = ($bbox.X0 + $bbox.X1) / 2.0
 
-    # 정상적인 캐릭터 한 마리의 크기 범위를 벗어나면(배경 제거 실패로 옷이
-    # 잘려나갔거나, 배경이 안 지워져 화면 전체가 잡힌 경우) 절차적 그림을
-    # 그대로 두고 이번엔 건너뜁니다.
-    if ($charH -lt 400 -or $charH -gt 700 -or $charW -lt 350 -or $charW -gt 750) {
-        Write-Output ("  !! 크기 이상해서 건너뜀 ({0}x{1}): {2}" -f $charW, $charH, $srcPath)
+    # 소스마다 해상도가 다르므로(제미니 ~1400px, GPT ~1700px) 절대 픽셀이 아니라
+    # 캔버스 대비 비율로 검사합니다. 캐릭터 덩어리가 캔버스를 거의 꽉 채우면
+    # (가로·세로 둘 다) 배경이 안 지워진 것이고, 어느 한 축이라도 15% 미만이면
+    # 옷이 잘려나간 것이라 절차적 그림을 그대로 두고 건너뜁니다.
+    $wr = $charW / [double]$src.Width
+    $hr = $charH / [double]$src.Height
+    if (($wr -gt 0.97 -and $hr -gt 0.97) -or $wr -lt 0.15 -or $hr -lt 0.15) {
+        Write-Output ("  !! 크기 이상해서 건너뜀 (가로 {0:P0} 세로 {1:P0}): {2}" -f $wr, $hr, $srcPath)
         $src.Dispose()
         return
     }
@@ -199,10 +204,13 @@ function Place-Frame([string]$srcPath, [string]$dstPath, [int]$CropX0 = -1, [int
     Write-Output ("  {0,-40} char {1}x{2} -> scale {3:N2}" -f (Split-Path -Leaf $dstPath), $charW, $charH, $sc)
 }
 
-# 두 캐릭터가 한 캔버스(1408 폭)에 나란히 나온 소스는 왼쪽 절반만 사용합니다.
-$TwoPanel = @{ 'mengdol/face_laugh' = $true; 'mengdol/face_shy' = $true; 'mengsoon/face_happy' = $true }
-# 배경 제거가 아직 깨끗하지 않은 소스는 이번 통합에서 건너뛰고 절차적 그림을 유지합니다.
-$Skip = @{ 'mengsoon/face_laugh' = $true; 'mengdol/face_laugh' = $true }
+# 예전 제미니 소스 중엔 캐릭터 2마리가 한 캔버스에 나온 게 있어서 왼쪽 절반만
+# 쓰던 표(`$TwoPanel`)가 있었는데, 지금은 14장 전부 GPT 단일 패널(clean_ai_refs.ps1
+# 로 마젠타 키잉)이라 크롭이 필요 없습니다. 다시 2패널 소스를 쓰면 'who/face_expr'
+# 키를 추가하고 Place-Frame 에 0 704 처럼 크롭 범위를 넘기세요.
+$TwoPanel = @{ }
+# 배경이 안 깨끗한 소스를 이번 통합에서 건너뛰고 싶으면 'who/face_expr' 키를 넣으세요.
+$Skip = @{ }
 
 Write-Output '얼굴 표정 AI 레퍼런스 -> 게임 프레임 배치'
 foreach ($who in 'mengdol', 'mengsoon') {
