@@ -1,0 +1,146 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/room.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/stages/room_empty_diorama.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/mengdol/mengdol_down_idle.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/shadow.png" id="5"]
+
+[sub_resource type="RectangleShape2D" id="player_shape"]
+size = Vector2(42, 18)
+[sub_resource type="RectangleShape2D" id="top_wall"]
+size = Vector2(1270, 44)
+[sub_resource type="RectangleShape2D" id="side_wall"]
+size = Vector2(44, 715)
+[sub_resource type="RectangleShape2D" id="bottom_wall"]
+size = Vector2(1270, 28)
+[sub_resource type="RectangleShape2D" id="bed_shape"]
+size = Vector2(290, 180)
+
+[node name="Room" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Background" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+centered = false
+position = Vector2(0, -22)
+scale = Vector2(0.76, 0.76)
+
+[node name="Walls" type="Node2D" parent="."]
+[node name="Top" type="StaticBody2D" parent="Walls"]
+position = Vector2(635, 30)
+[node name="Shape" type="CollisionShape2D" parent="Walls/Top"]
+shape = SubResource("top_wall")
+[node name="Left" type="StaticBody2D" parent="Walls"]
+position = Vector2(20, 357)
+[node name="Shape" type="CollisionShape2D" parent="Walls/Left"]
+shape = SubResource("side_wall")
+[node name="Right" type="StaticBody2D" parent="Walls"]
+position = Vector2(1250, 357)
+[node name="Shape" type="CollisionShape2D" parent="Walls/Right"]
+shape = SubResource("side_wall")
+[node name="Bottom" type="StaticBody2D" parent="Walls"]
+position = Vector2(635, 701)
+[node name="Shape" type="CollisionShape2D" parent="Walls/Bottom"]
+shape = SubResource("bottom_wall")
+[node name="Bed" type="StaticBody2D" parent="Walls"]
+position = Vector2(220, 225)
+[node name="Shape" type="CollisionShape2D" parent="Walls/Bed"]
+shape = SubResource("bed_shape")
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(620, 555)
+collision_layer = 2
+collision_mask = 1
+[node name="Body" type="Sprite2D" parent="Player"]
+texture = ExtResource("3")
+offset = Vector2(0, -96)
+[node name="Shadow" type="Sprite2D" parent="Player"]
+texture = ExtResource("5")
+position = Vector2(0, -2)
+scale = Vector2(0.58, 0.58)
+z_index = -1
+[node name="Collider" type="CollisionShape2D" parent="Player"]
+position = Vector2(0, -8)
+shape = SubResource("player_shape")
+[node name="Camera" type="Camera2D" parent="Player"]
+position = Vector2(0, -90)
+position_smoothing_enabled = true
+position_smoothing_speed = 5.0
+limit_left = 0
+limit_top = 0
+limit_right = 1270
+limit_bottom = 715
+
+[node name="Indicators" type="Node2D" parent="."]
+[node name="Bed" type="Label" parent="Indicators"]
+position = Vector2(212, 125)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.2, 0.12, 0.12, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 34
+text = "!"
+[node name="Table" type="Label" parent="Indicators"]
+position = Vector2(738, 98)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.2, 0.12, 0.12, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 34
+text = "!"
+[node name="Gloves" type="Label" parent="Indicators"]
+position = Vector2(1028, 48)
+theme_override_colors/font_color = Color(1, 0.84, 0.12, 1)
+theme_override_colors/font_outline_color = Color(0.23, 0.12, 0.08, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 34
+text = "!"
+
+[node name="UI" type="CanvasLayer" parent="."]
+[node name="Objective" type="Label" parent="UI"]
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 780.0
+offset_bottom = 52.0
+theme_override_colors/font_color = Color(1, 0.97, 0.88, 1)
+theme_override_colors/font_outline_color = Color(0.16, 0.1, 0.12, 1)
+theme_override_constants/outline_size = 7
+theme_override_font_sizes/font_size = 22
+[node name="Prompt" type="Label" parent="UI"]
+visible = false
+offset_left = 260.0
+offset_top = 454.0
+offset_right = 700.0
+offset_bottom = 500.0
+theme_override_colors/font_color = Color(1, 0.96, 0.78, 1)
+theme_override_colors/font_outline_color = Color(0.16, 0.1, 0.12, 1)
+theme_override_constants/outline_size = 7
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+[node name="DialogueBox" type="Panel" parent="UI"]
+offset_left = 70.0
+offset_top = 386.0
+offset_right = 890.0
+offset_bottom = 512.0
+theme_override_styles/panel = null
+[node name="Backdrop" type="ColorRect" parent="UI/DialogueBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.11, 0.08, 0.12, 0.92)
+mouse_filter = 2
+[node name="Text" type="Label" parent="UI/DialogueBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 24.0
+offset_right = -28.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.97, 0.88, 1)
+theme_override_font_sizes/font_size = 25
+autowrap_mode = 2
