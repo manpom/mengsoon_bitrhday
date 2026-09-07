@@ -1,0 +1,187 @@
+[gd_scene format=3 uid="uid://co74rsqvbphr3"]
+
+[ext_resource type="Script" uid="uid://b1j6rgxrcahso" path="res://scripts/bedroom_test.gd" id="1_main"]
+[ext_resource type="Texture2D" uid="uid://bpcprda51veat" path="res://assets/backgrounds/room_with_bed_corner_v1.png" id="2_background"]
+[ext_resource type="Texture2D" uid="uid://c7iyk5bavv6wm" path="res://assets/characters/runtime/maengdol/bed/maengdol_sleep_1.png" id="4_sleep_preview"]
+[ext_resource type="Texture2D" uid="uid://brjlkxqiy8ds2" path="res://assets/characters/runtime/maengdol/walk/maengdol_walk_s_1.png" id="5_walk_preview"]
+[ext_resource type="Texture2D" uid="uid://cg1acv6tg2tvd" path="res://assets/props/boxing_gloves/boxing_gloves_right_wall_v3.png" id="6_gloves"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_glove_interaction"]
+radius = 180.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lkhyp"]
+size = Vector2(100, 18)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5sbc3"]
+size = Vector2(2000, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7j2lx"]
+size = Vector2(400, 20)
+
+[node name="BedroomTest" type="Node2D" unique_id=2130951914]
+script = ExtResource("1_main")
+
+[node name="Environment" type="Node2D" parent="." unique_id=371422553]
+
+[node name="EmptyRoomBackground" type="Sprite2D" parent="Environment" unique_id=366934454]
+z_index = -100
+position = Vector2(960, 540)
+scale = Vector2(1.14833, 1.14833)
+texture = ExtResource("2_background")
+
+[node name="Props" type="Node2D" parent="." unique_id=290375919]
+
+[node name="Bed" type="Node2D" parent="Props" unique_id=1427034852]
+unique_name_in_owner = true
+position = Vector2(450, 390)
+scale = Vector2(0.5, 0.5)
+
+[node name="BedBase" type="Sprite2D" parent="Props/Bed" unique_id=1457386400]
+visible = false
+
+[node name="BedCollision" type="StaticBody2D" parent="Props/Bed" unique_id=2140556812]
+collision_layer = 2
+collision_mask = 0
+
+[node name="Footprint" type="CollisionPolygon2D" parent="Props/Bed/BedCollision" unique_id=532293460]
+position = Vector2(-8, -26)
+polygon = PackedVector2Array(-576, -96, 2, -388, 582, 346, -72, 568)
+
+[node name="PlacementGuides" type="Node2D" parent="Props/Bed" unique_id=1820370423]
+
+[node name="MaengdolSleepAnchor" type="Marker2D" parent="Props/Bed/PlacementGuides" unique_id=1430071067]
+unique_name_in_owner = true
+position = Vector2(-140, -20)
+gizmo_extents = 48.0
+
+[node name="MaengdolExitAnchor" type="Marker2D" parent="Props/Bed/PlacementGuides" unique_id=964769694]
+unique_name_in_owner = true
+position = Vector2(820, 520)
+gizmo_extents = 48.0
+
+[node name="BoxingGloves" type="Node2D" parent="Props" unique_id=1149189916]
+z_index = 2
+position = Vector2(1790, 380)
+rotation = -0.08
+
+[node name="WallMountedGloves" type="Sprite2D" parent="Props/BoxingGloves" unique_id=1347001029]
+scale = Vector2(0.13, 0.13)
+texture = ExtResource("6_gloves")
+
+[node name="InteractionMarker" type="Label" parent="Props/BoxingGloves" unique_id=1632287556]
+offset_left = -18.0
+offset_top = -170.0
+offset_right = 18.0
+offset_bottom = -112.0
+theme_override_colors/font_color = Color(1, 0.84, 0.12, 1)
+theme_override_colors/font_shadow_color = Color(0.35, 0.2, 0.04, 0.8)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 52
+text = "!"
+horizontal_alignment = 1
+
+[node name="BoxingGloveInteractionArea" type="Area2D" parent="Props" unique_id=208100001]
+unique_name_in_owner = true
+position = Vector2(1570, 650)
+collision_layer = 0
+
+[node name="InteractionRange" type="CollisionShape2D" parent="Props/BoxingGloveInteractionArea" unique_id=1283474767]
+shape = SubResource("CircleShape2D_glove_interaction")
+
+[node name="Actors" type="Node2D" parent="." unique_id=916941785]
+
+[node name="Maengdol" type="CharacterBody2D" parent="Actors" unique_id=388222421]
+unique_name_in_owner = true
+z_index = 10
+position = Vector2(380, 380)
+collision_mask = 2
+
+[node name="BedPoseVisual" type="Node2D" parent="Actors/Maengdol" unique_id=289937181]
+unique_name_in_owner = true
+position = Vector2(66, -165)
+
+[node name="BedPosePreview" type="Sprite2D" parent="Actors/Maengdol/BedPoseVisual" unique_id=1553818734]
+unique_name_in_owner = true
+texture = ExtResource("4_sleep_preview")
+
+[node name="BedPoseAnimation" type="AnimatedSprite2D" parent="Actors/Maengdol/BedPoseVisual" unique_id=1354827433]
+unique_name_in_owner = true
+
+[node name="WalkVisual" type="Node2D" parent="Actors/Maengdol" unique_id=1524695770]
+unique_name_in_owner = true
+visible = false
+scale = Vector2(1.18, 1.18)
+
+[node name="WalkPreview" type="Sprite2D" parent="Actors/Maengdol/WalkVisual" unique_id=1486908476]
+unique_name_in_owner = true
+texture = ExtResource("5_walk_preview")
+
+[node name="WalkAnimation" type="AnimatedSprite2D" parent="Actors/Maengdol/WalkVisual" unique_id=1984240227]
+unique_name_in_owner = true
+
+[node name="MaengdolCollision" type="CollisionShape2D" parent="Actors/Maengdol" unique_id=375857048]
+unique_name_in_owner = true
+position = Vector2(5, 163)
+shape = SubResource("RectangleShape2D_lkhyp")
+disabled = true
+
+[node name="WallCollisions" type="Node2D" parent="." unique_id=49496943]
+
+[node name="Topwall" type="StaticBody2D" parent="WallCollisions" unique_id=1326965355]
+position = Vector2(158, 321)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallCollisions/Topwall" unique_id=1301624527]
+position = Vector2(787, -4)
+shape = SubResource("RectangleShape2D_5sbc3")
+
+[node name="Bottomwall" type="StaticBody2D" parent="WallCollisions" unique_id=254102653]
+position = Vector2(784, 1073)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallCollisions/Bottomwall" unique_id=1315002211]
+position = Vector2(161, 2)
+shape = SubResource("RectangleShape2D_5sbc3")
+
+[node name="LeftUpperwall" type="StaticBody2D" parent="WallCollisions" unique_id=1712147002]
+position = Vector2(80, 516)
+rotation = 2.1816616
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallCollisions/LeftUpperwall" unique_id=1675813108]
+position = Vector2(-26.544708, 0)
+shape = SubResource("RectangleShape2D_7j2lx")
+
+[node name="LeftLowerwall" type="StaticBody2D" parent="WallCollisions" unique_id=688023304]
+position = Vector2(11, 857)
+rotation = 1.5707964
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallCollisions/LeftLowerwall" unique_id=1394729719]
+position = Vector2(13.9999695, 5.999999)
+shape = SubResource("RectangleShape2D_7j2lx")
+
+[node name="RightUpperwall" type="StaticBody2D" parent="WallCollisions" unique_id=1551538924]
+position = Vector2(1807, 464.99988)
+rotation = -2.1816616
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallCollisions/RightUpperwall" unique_id=1957612792]
+position = Vector2(-26.544708, 0)
+shape = SubResource("RectangleShape2D_7j2lx")
+
+[node name="RightLowerwall" type="StaticBody2D" parent="WallCollisions" unique_id=1605460842]
+position = Vector2(1921, 855)
+rotation = 1.5707964
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallCollisions/RightLowerwall" unique_id=1109884406]
+position = Vector2(13.9999695, 5.999999)
+shape = SubResource("RectangleShape2D_7j2lx")
